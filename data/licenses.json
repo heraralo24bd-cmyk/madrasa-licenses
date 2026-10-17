@@ -1,16 +1,5 @@
 [
   {
-    "license_id": "3c1e2a4d2f5b32fe1a2dafdba45a5663",
-    "customer_name": "ruhul amin",
-    "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
-    "days": 365,
-    "issued_at": 1792259615,
-    "expires_at": 1823795615,
-    "issued_by": "ruhul",
-    "status": "active",
-    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjNjMWUyYTRkMmY1YjMyZmUxYTJkYWZkYmE0NWE1NjYzIiwiY3VzdG9tZXJfbmFtZSI6InJ1aHVsIGFtaW4iLCJkZXZpY2VfaWQiOiJkMzkzYjE1ODQ3ZmUxYzcwNmRjYzVlNGRlNDZjOWRlZDEwMWY2ZTk5YTE0ZmIxNzJjNTljZDg1ZjBjNmMxZTU2IiwiaXNzdWVkX2F0IjoxNzkyMjU5NjE1LCJleHBpcmVzX2F0IjoxODIzNzk1NjE1fQ.npB5L4eUlwNbnMj8C1AHzKul4MdoGhQ6g9vwMxjuE2pk8wtdOuwEF5W-tgQrYzzzBPAGi9JKXKZihYzXcrAZCg"
-  },
-  {
     "license_id": "28202921cace7c79c34f4d8febc51022",
     "customer_name": "H. M. Khairul Alom",
     "device_code": "MM-PC-090e7e08751c9c8f4f19afe4a934b3331bcc91378e8af2b7dd88f32fdb195ae8",
