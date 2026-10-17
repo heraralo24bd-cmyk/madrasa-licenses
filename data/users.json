@@ -1,0 +1,14 @@
+[
+  {
+    "username": "ruhul",
+    "salt": "ff010416914c05a9",
+    "pass_hash": "a61ece77c323439cbfd446cce0d43da95003a1fa9c3cb4348dd96418226822fd",
+    "role": "main",
+    "created_by": "system",
+    "created_at": 1792245891,
+    "secrets_enc": {
+      "iv": "5afd664da31f7c06dd0f72ee",
+      "ct": "Eb-KsqmbeaFuyOTPltxFMxmL1EP49yfG8kH2_opfveRDVZ889ysc8ko5jEBtiOuX62chStsK__zQG6O1SPqoyhEVQTzNrSMfFWlJszTU"
+    }
+  }
+]
