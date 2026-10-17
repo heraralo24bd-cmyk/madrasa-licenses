@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "license_id": "3585c5975d7bc30457b363e5975f01ed",
+    "customer_name": "ruhul",
+    "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
+    "days": 365,
+    "issued_at": 1792248365,
+    "expires_at": 1823784365,
+    "issued_by": "ruhul",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjM1ODVjNTk3NWQ3YmMzMDQ1N2IzNjNlNTk3NWYwMWVkIiwiY3VzdG9tZXJfbmFtZSI6InJ1aHVsIiwiZGV2aWNlX2lkIjoiZDM5M2IxNTg0N2ZlMWM3MDZkY2M1ZTRkZTQ2YzlkZWQxMDFmNmU5OWExNGZiMTcyYzU5Y2Q4NWYwYzZjMWU1NiIsImlzc3VlZF9hdCI6MTc5MjI0ODM2NSwiZXhwaXJlc19hdCI6MTgyMzc4NDM2NX0.wmb_Om_j3vXX9RrpOR8XDFLzoO2lonwOCnXp7XUj1CRsMl7a8peb0f6HEe-ssCLOPx_iH3oqzUEK1PNt1PhACg"
+  }
+]
