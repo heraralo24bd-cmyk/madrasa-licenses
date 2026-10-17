@@ -10,5 +10,17 @@
       "iv": "80ae01999de51124f1e9361e",
       "ct": "W2KWuv3If-Qx-iLtkjx8T_a6tCd5E7_KWTlD7z71mNewtJcqTPxAtUYdL3gOPLzq8moq2HEeB4V-Z5S0ZPlpuQ9zvyBOLoubRt_3DUqEad_B93wDkEu0OrYub9dIX2XtBs8m_KcS2o-eNLRdRwMUqtgJqtGanJA"
     }
+  },
+  {
+    "username": "omorfaruk vai",
+    "salt": "30278ec7545b4acf",
+    "pass_hash": "285ac8057b7911b06e8087b29fb7334502d02cdb82e4e69bc1311df0be7a0448",
+    "role": "sub",
+    "created_by": "ruhul",
+    "created_at": 1792248557,
+    "secrets_enc": {
+      "iv": "7a115c028843dfd8bafe457c",
+      "ct": "wL97gGXmsTzzgybvSmtPv_cSIdI2CoZ3pGwB2TQGMFYMR6gOuraI5aQCKVDYfsQjTvpzt_RQSsNLHdAJBErWgkS_JIoulUGyPUxGPRfTk3Ly6pED5Swbuv6Yr76dtnHdkTN-njdkABBSBuBi246JUh62wzHzED8"
+    }
   }
 ]
