@@ -59,5 +59,16 @@
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjU5ZmJiNjk0ZmM2MTM5MWI0NmY4ZDJkYTFkODk4NTFkIiwiY3VzdG9tZXJfbmFtZSI6ImVlIiwiZGV2aWNlX2lkIjoiZDM5M2IxNTg0N2ZlMWM3MDZkY2M1ZTRkZTQ2YzlkZWQxMDFmNmU5OWExNGZiMTcyYzU5Y2Q4NWYwYzZjMWU1NiIsImlzc3VlZF9hdCI6MTc5MjI1ODMyOCwiZXhwaXJlc19hdCI6MTc5MjM0NDcyOH0.C5YZPGHoQ5DD5UuP_jzgXLixLV2qpJZZTLtFla4kp0zmL5lQWWFu2YLkPpY6Nl-3zxkKdja0oUws3-Pvbv16BA",
     "revoked_at": 1792258379,
     "revoked_by": "ruhul"
+  },
+  {
+    "license_id": "a1cf0c8f8126db490ed960f80ffdf567",
+    "customer_name": "H. M. Khairul Alom",
+    "device_code": "MM-PC-090e7e08751c9c8f4f19afe4a934b3331bcc91378e8af2b7dd88f32fdb195ae8",
+    "days": 1,
+    "issued_at": 1792259375,
+    "expires_at": 1792345775,
+    "issued_by": "ruhul",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImExY2YwYzhmODEyNmRiNDkwZWQ5NjBmODBmZmRmNTY3IiwiY3VzdG9tZXJfbmFtZSI6IkguIE0uIEtoYWlydWwgQWxvbSIsImRldmljZV9pZCI6IjA5MGU3ZTA4NzUxYzljOGY0ZjE5YWZlNGE5MzRiMzMzMWJjYzkxMzc4ZThhZjJiN2RkODhmMzJmZGIxOTVhZTgiLCJpc3N1ZWRfYXQiOjE3OTIyNTkzNzUsImV4cGlyZXNfYXQiOjE3OTIzNDU3NzV9.aFYuxdgeiw_v1CLahWfBJteagjR4XqstsNabz_rU68pOhFv9ZYrR6IX1X59fe3GMh-Yp_CX4-z33wHWLB76RBw"
   }
 ]
