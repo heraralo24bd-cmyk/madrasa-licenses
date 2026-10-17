@@ -1,16 +1,5 @@
 [
   {
-    "license_id": "4160f9b66b2be939d58561ad9ed30863",
-    "customer_name": "allmadina",
-    "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
-    "days": 30,
-    "issued_at": 1792258224,
-    "expires_at": 1794850224,
-    "issued_by": "ruhul",
-    "status": "active",
-    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjQxNjBmOWI2NmIyYmU5MzlkNTg1NjFhZDllZDMwODYzIiwiY3VzdG9tZXJfbmFtZSI6ImFsbG1hZGluYSIsImRldmljZV9pZCI6ImQzOTNiMTU4NDdmZTFjNzA2ZGNjNWU0ZGU0NmM5ZGVkMTAxZjZlOTlhMTRmYjE3MmM1OWNkODVmMGM2YzFlNTYiLCJpc3N1ZWRfYXQiOjE3OTIyNTgyMjQsImV4cGlyZXNfYXQiOjE3OTQ4NTAyMjR9.ahywPts-PXo8BzkQ2o6DBCWOgc0LwKw4Bp_7RC70LfqblPEzaYJ5FR_DxRqrUcAgolXT-pqq-8ptdbe8n4L5Ag"
-  },
-  {
     "license_id": "59fbb694fc61391b46f8d2da1d89851d",
     "customer_name": "ee",
     "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
