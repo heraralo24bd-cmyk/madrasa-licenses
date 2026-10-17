@@ -20,8 +20,10 @@
     "issued_at": 1792248656,
     "expires_at": 1794840656,
     "issued_by": "omorfaruk vai",
-    "status": "active",
-    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImE4NzFkNGM4OTY4YTI3ZjEwYTU4NDBhNThiMzJhMGM4IiwiY3VzdG9tZXJfbmFtZSI6ImFtaW4iLCJkZXZpY2VfaWQiOiJkMzkzYjE1ODQ3ZmUxYzcwNmRjYzVlNGRlNDZjOWRlZDEwMWY2ZTk5YTE0ZmIxNzJjNTljZDg1ZjBjNmMxZTU2IiwiaXNzdWVkX2F0IjoxNzkyMjQ4NjU2LCJleHBpcmVzX2F0IjoxNzk0ODQwNjU2fQ.CihRW-0X4tZD4P_6S7Z0b37LxKYXLZWwYBm3QOBUb1z3dU8uFqAMXGazzuyy8Y0C_z-lvhRw0QDdjXbM9D0SAg"
+    "status": "revoked",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImE4NzFkNGM4OTY4YTI3ZjEwYTU4NDBhNThiMzJhMGM4IiwiY3VzdG9tZXJfbmFtZSI6ImFtaW4iLCJkZXZpY2VfaWQiOiJkMzkzYjE1ODQ3ZmUxYzcwNmRjYzVlNGRlNDZjOWRlZDEwMWY2ZTk5YTE0ZmIxNzJjNTljZDg1ZjBjNmMxZTU2IiwiaXNzdWVkX2F0IjoxNzkyMjQ4NjU2LCJleHBpcmVzX2F0IjoxNzk0ODQwNjU2fQ.CihRW-0X4tZD4P_6S7Z0b37LxKYXLZWwYBm3QOBUb1z3dU8uFqAMXGazzuyy8Y0C_z-lvhRw0QDdjXbM9D0SAg",
+    "revoked_at": 1792251821,
+    "revoked_by": "ruhul"
   },
   {
     "license_id": "aef696a626b9b432b750f66376cb47d9",
