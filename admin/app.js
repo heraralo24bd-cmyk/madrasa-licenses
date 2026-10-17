@@ -162,10 +162,14 @@ const DB = {
   },
   async publishRevocations(){
     const list=await this.loadLicenses();
-    const revoked=list.filter(l=>l.status==='revoked').map(l=>l.license_id);
+    const grave=await this.loadGrave();
+    const revoked=list.filter(l=>l.status==='revoked').map(l=>l.license_id)
+      .concat(grave.filter(id=>!list.some(l=>l.license_id===id)));
     const body=buildRevocations(revoked, SESS.secrets.seed, nowSec());
     await GH.putFile('revocations.json', body, SESS.secrets.pat, 'Publish revocations');
-  }
+  },
+  async loadGrave(){ try{ const r=await gh('GET','data/deleted_revoked.json'); return Array.isArray(r)?r:[]; }catch(e){ return []; } },
+  async saveGrave(a){ await GH.putFile('data/deleted_revoked.json', JSON.stringify(a,null,2), SESS.secrets.pat, 'Update deleted revocations'); }
 };
 
 /* ---------- helpers ---------- */
@@ -349,6 +353,8 @@ async function vDetail(id){
   '<label class="f">লাইসেন্স কী</label><div class="keybox">'+esc(l.key||'—')+'</div>'+
   '<div class="row-btns">'+(l.key?'<button class="btn btn-ghost btn-sm" id="cp">কপি</button>':'')+
   (isMain()&&l.status!=='revoked'?'<button class="btn btn-danger btn-sm" id="rv">বাতিল করো</button>':'')+
+  (isMain()&&l.status==='revoked'?'<button class="btn btn-primary btn-sm" id="ac">সচল করো</button>':'')+
+  (isMain()?'<button class="btn btn-ghost btn-sm" id="dl">ডিলিট</button>':'')+
   '<button class="btn btn-ghost btn-sm" id="x">বন্ধ</button></div><div id="mm"></div></div>';
   document.body.appendChild(m);
   $('#x',m).onclick=()=>m.remove(); m.onclick=e=>{ if(e.target===m) m.remove(); };
@@ -364,6 +370,37 @@ async function vDetail(id){
       await DB.saveLicenses(all); await DB.publishRevocations();
       $('#mm',m).innerHTML='<div class="ok">বাতিল হয়েছে। গ্রাহকের পিসি অনলাইনে এলে বন্ধ হয়ে যাবে।</div>'; rv.remove();
     }catch(e){ $('#mm',m).innerHTML='<div class="err">'+esc(e.message)+'</div>'; rv.disabled=false; rv.textContent='বাতিল করো'; }
+  };
+  const ac=$('#ac',m);
+  if(ac) ac.onclick=async()=>{
+    if(!confirm('"'+l.customer_name+'"-এর লাইসেন্স আবার সচল করবে?')) return;
+    ac.disabled=true; ac.textContent='হচ্ছে…';
+    try{
+      const all=await DB.loadLicenses();
+      const t=all.find(x=>x.license_id===id);
+      t.status='active'; delete t.revoked_at; delete t.revoked_by;
+      await DB.saveLicenses(all); await DB.publishRevocations();
+      $('#mm',m).innerHTML='<div class="ok">লাইসেন্স সচল হয়েছে। গ্রাহকের পিসি অনলাইনে এলে খুলে যাবে।</div>'; ac.remove();
+    }catch(e){ $('#mm',m).innerHTML='<div class="err">'+esc(e.message)+'</div>'; ac.disabled=false; ac.textContent='সচল করো'; }
+  };
+  const dl=$('#dl',m);
+  if(dl) dl.onclick=async()=>{
+    const msg=l.status==='revoked'
+      ? '"'+l.customer_name+'"-এর বাতিল লাইসেন্স সম্পূর্ণ ডিলিট করবে? (তার সফটওয়্যার বন্ধই থাকবে)'
+      : '"'+l.customer_name+'"-এর লাইসেন্স ডিলিট করবে?';
+    if(!confirm(msg)) return;
+    dl.disabled=true; dl.textContent='হচ্ছে…';
+    try{
+      const wasRevoked=l.status==='revoked';
+      const all=(await DB.loadLicenses()).filter(x=>x.license_id!==id);
+      await DB.saveLicenses(all);
+      if(wasRevoked){
+        const g=await DB.loadGrave();
+        if(!g.includes(id)){ g.push(id); await DB.saveGrave(g); }
+      }
+      await DB.publishRevocations();
+      m.remove(); vShell('licenses');
+    }catch(e){ $('#mm',m).innerHTML='<div class="err">'+esc(e.message)+'</div>'; dl.disabled=false; dl.textContent='ডিলিট'; }
   };
 }
 
