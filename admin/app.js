@@ -247,22 +247,36 @@ function vKeySetup(){
   };
 }
 
-/* ---------- shell ---------- */
+/* ---------- shell: বাম সাইডবার ---------- */
 let CV='dashboard';
+const I={
+dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>',
+list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>',
+plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
+users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c2.8.4 5 2.6 5 5.5"/></svg>',
+gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>'};
+const SI={
+box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
+check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M8.5 12.5l2.5 2.5 4.5-5.5"/></svg>',
+x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
+clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>'};
+const stat=(c,ic,n,l)=>'<div class="stat '+c+'"><div class="s-icon">'+ic+'</div><div><div class="n">'+n+'</div><div class="l">'+l+'</div></div></div>';
 function vShell(view){
   CV=view||'dashboard';
   if(!SESS.user){ vLogin(); return; }
-  const nav=[['dashboard','ড্যাশবোর্ড'],['licenses','লাইসেন্স'],['new','নতুন লাইসেন্স']];
-  if(isMain()) nav.push(['users','সাব-অ্যাডমিন']);
-  nav.push(['settings','সেটিংস']);
+  const nav=[['dashboard','ড্যাশবোর্ড',I.dash],['licenses','লাইসেন্স',I.list],['new','নতুন লাইসেন্স',I.plus]];
+  if(isMain()) nav.push(['users','সাব-অ্যাডমিন',I.users]);
+  nav.push(['settings','সেটিংস',I.gear]);
   app.innerHTML=
-  '<div class="shell"><div class="topbar"><img class="logo" src="logo.webp" alt="">'+
-  '<div class="title">লাইসেন্স মেশিন<small>মাদরাসা ম্যানেজার</small></div><div class="spacer"></div>'+
-  '<div class="who"><b>'+esc(SESS.user.username)+'</b> '+(isMain()?'<span class="badge gold">মেইন</span>':'<span class="badge on">সাব</span>')+'</div></div>'+
-  '<div class="nav">'+nav.map(n=>'<button data-v="'+n[0]+'" class="'+(CV===n[0]?'active':'')+'">'+n[1]+'</button>').join('')+'</div>'+
-  '<div class="main" id="view"></div>'+
-  '<div class="footer-note">মাদরাসা ম্যানেজার • লাইসেন্স মেশিন</div></div>';
-  $$('.nav button').forEach(b=>b.onclick=()=>vShell(b.dataset.v));
+  '<div class="shell"><aside class="sidebar">'+
+  '<div class="brand"><img class="logo" src="logo.webp" alt=""><div class="bt">লাইসেন্স মেশিন<small>মাদরাসা ম্যানেজার</small></div></div>'+
+  '<nav class="snav">'+nav.map(n=>'<button data-v="'+n[0]+'" class="'+(CV===n[0]?'active':'')+'">'+n[2]+'<span>'+n[1]+'</span></button>').join('')+'</nav>'+
+  '<div class="side-foot"><div class="who"><b>'+esc(SESS.user.username)+'</b>'+(isMain()?'<span class="badge gold">মেইন</span>':'<span class="badge on">সাব</span>')+'</div>'+
+  '<button class="btn btn-ghost btn-sm" id="slo">লগআউট</button></div>'+
+  '</aside><div class="content"><div class="main" id="view"></div>'+
+  '<div class="footer-note">মাদরাসা ম্যানেজার • লাইসেন্স মেশিন</div></div></div>';
+  $$('.snav button').forEach(b=>b.onclick=()=>vShell(b.dataset.v));
+  $('#slo').onclick=()=>{ SESS.user=null; SESS.secrets=null; SESS.pw=null; vLogin('লগআউট হয়েছে।'); };
   ({dashboard:vDash,licenses:vLicenses,'new':vNew,users:vUsers,settings:vSettings}[CV]||vDash)();
 }
 
@@ -276,10 +290,10 @@ async function vDash(){
     const exp=rows.filter(l=>{const d=daysLeft(l.expires_at);return d!==null&&d>=0&&d<=30;}).length;
     v.innerHTML='<div class="page-head"><h2>ড্যাশবোর্ড</h2></div>'+
     '<div class="stats">'+
-    '<div class="stat"><div class="n">'+rows.length+'</div><div class="l">মোট লাইসেন্স</div></div>'+
-    '<div class="stat"><div class="n">'+act+'</div><div class="l">চালু</div></div>'+
-    '<div class="stat red"><div class="n">'+rev+'</div><div class="l">বাতিল</div></div>'+
-    '<div class="stat gold"><div class="n">'+exp+'</div><div class="l">৩০ দিনে শেষ</div></div></div>'+
+    stat('s1',SI.box,rows.length,'মোট লাইসেন্স')+
+    stat('s2',SI.check,act,'চালু')+
+    stat('s3',SI.x,rev,'বাতিল')+
+    stat('s4',SI.clock,exp,'৩০ দিনে শেষ')+'</div>'+
     '<div class="card"><h3>সাম্প্রতিক</h3>'+licTable(rows.slice(0,6))+'</div>';
     wireRows(v);
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
