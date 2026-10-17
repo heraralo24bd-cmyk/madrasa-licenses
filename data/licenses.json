@@ -26,17 +26,6 @@
     "revoked_by": "ruhul"
   },
   {
-    "license_id": "aef696a626b9b432b750f66376cb47d9",
-    "customer_name": "rt",
-    "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e86",
-    "days": 30,
-    "issued_at": 1792251748,
-    "expires_at": 1794843748,
-    "issued_by": "omorfaruk vai",
-    "status": "active",
-    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImFlZjY5NmE2MjZiOWI0MzJiNzUwZjY2Mzc2Y2I0N2Q5IiwiY3VzdG9tZXJfbmFtZSI6InJ0IiwiZGV2aWNlX2lkIjoiZDM5M2IxNTg0N2ZlMWM3MDZkY2M1ZTRkZTQ2YzlkZWQxMDFmNmU5OWExNGZiMTcyYzU5Y2Q4NWYwYzZjMWU4NiIsImlzc3VlZF9hdCI6MTc5MjI1MTc0OCwiZXhwaXJlc19hdCI6MTc5NDg0Mzc0OH0.rPEnPantrlvS8aSyIF3GOwGBYzBPVF5jPb5b2OcuroNwxT_weCE_jzqrEjhFuk-62rzt2xOyoyENTI17pYOnCw"
-  },
-  {
     "license_id": "4160f9b66b2be939d58561ad9ed30863",
     "customer_name": "allmadina",
     "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
