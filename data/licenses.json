@@ -1,1 +1,13 @@
-[]
+[
+  {
+    "license_id": "e8c32f48bfd1eeb32bbbbaa34cd6d4eb",
+    "customer_name": "md ruhul amin",
+    "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
+    "days": 30,
+    "issued_at": 1792284910,
+    "expires_at": 1794876910,
+    "issued_by": "ruhul",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImU4YzMyZjQ4YmZkMWVlYjMyYmJiYmFhMzRjZDZkNGViIiwiY3VzdG9tZXJfbmFtZSI6Im1kIHJ1aHVsIGFtaW4iLCJkZXZpY2VfaWQiOiJkMzkzYjE1ODQ3ZmUxYzcwNmRjYzVlNGRlNDZjOWRlZDEwMWY2ZTk5YTE0ZmIxNzJjNTljZDg1ZjBjNmMxZTU2IiwiaXNzdWVkX2F0IjoxNzkyMjg0OTEwLCJleHBpcmVzX2F0IjoxNzk0ODc2OTEwfQ.I4rBuBfg0CUov79KjP4qnFnvFtIcd4qFJT1QgXxfiW5G5XFz3OY7BQ68_aIDVGxuXPXxV6wEv4afV8Pkj9JEBQ"
+  }
+]
