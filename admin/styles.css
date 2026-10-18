@@ -13,7 +13,7 @@
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{margin:0;font-family:"Noto Sans Bengali","Hind Siliguri",system-ui,-apple-system,sans-serif;
+body{margin:0;font-family:"Hind Siliguri","Noto Sans Bengali",system-ui,-apple-system,sans-serif;
   background:radial-gradient(1000px 500px at 85% -5%,rgba(201,162,39,.07),transparent 60%),
              radial-gradient(900px 500px at -10% 110%,rgba(20,121,88,.06),transparent 60%),
              var(--bg);
@@ -140,6 +140,7 @@ tbody tr:nth-child(n+7){animation-delay:.21s}
 
 /* ---------- forms ---------- */
 label.f{display:block;font-size:13.5px;font-weight:700;margin:14px 0 6px;color:var(--navy-soft)}
+h1,h2,h3,.pf-name,.stat .n,.vstat .n{font-family:"Baloo Da 2","Hind Siliguri",sans-serif}
 input[type=text],input[type=password],input[type=number],textarea,select{width:100%;padding:12px 14px;font-size:15px;
   border:1.5px solid var(--line);border-radius:12px;font-family:inherit;background:#fbfdff;color:var(--text);
   transition:border .25s,box-shadow .25s,transform .15s}
@@ -154,7 +155,7 @@ textarea{resize:vertical;min-height:76px}
   font-size:14px;margin:12px 0;line-height:1.9;animation:rise .3s var(--ease)}
 
 /* ---------- buttons ---------- */
-.btn{border:0;border-radius:12px;padding:12px 26px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;
+.btn{border:0;border-radius:12px;padding:12px 26px;font-size:15px;font-weight:700;cursor:pointer;font-family:"Baloo Da 2","Hind Siliguri",sans-serif;
   transition:transform .18s var(--ease),filter .2s,box-shadow .25s;position:relative;overflow:hidden}
 .btn::after{content:'';position:absolute;top:0;left:-80%;width:50%;height:100%;transform:skewX(-20deg);
   background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transition:left .5s}
@@ -257,14 +258,33 @@ input[type=file]:hover{border-color:var(--teal);background:var(--teal-bg)}
 /* শুধু অ্যানিমেশন কমাতে চাইলে */
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 
-/* ---------- প্রোফাইল পেজ ---------- */
-.pf-head{overflow:hidden}
-.pf-head::before{content:'';position:absolute;top:0;left:0;right:0;height:110px;
-  background:linear-gradient(120deg,#0a1f38,#1d4a73 60%,#0d5c43);opacity:.96}
-.pf-top{position:relative;display:flex;gap:20px;align-items:flex-end;margin-bottom:8px;flex-wrap:wrap}
-.pf-pic{width:120px;height:120px;border-width:4px;margin-top:36px;box-shadow:0 12px 30px rgba(12,35,64,.35)}
-.pf-id{padding-bottom:6px}
-.pf-id h3{margin:0 0 4px;font-size:24px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35)}
-.pf-id .p-mad{color:rgba(255,255,255,.85)}
-.pf-head .kv{position:relative}
-@media(max-width:640px){.pf-pic{width:96px;height:96px;margin-top:48px}.pf-id h3{font-size:20px}}
+/* ---------- প্রোফাইল পেজ (প্রিমিয়াম, শান্ত লুক) ---------- */
+.pf-card{overflow:hidden;padding:0;text-align:center}
+.pf-cover{height:150px;position:relative;overflow:hidden;
+  background:linear-gradient(120deg,#081a30 0%,#1d4a73 55%,#0d5c43 130%)}
+.pf-cover::before{content:'';position:absolute;inset:0;opacity:.55;
+  background:radial-gradient(420px 170px at 50% -40px,rgba(201,162,39,.35),transparent 70%)}
+.pf-cover::after{content:'';position:absolute;inset:0;opacity:.13;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.5) 0 1px,transparent 1px 14px),
+                   repeating-linear-gradient(-45deg,rgba(255,255,255,.5) 0 1px,transparent 1px 14px)}
+.pf-main{padding:0 26px 28px;position:relative}
+.pf-ava{width:124px;height:124px;margin:-62px auto 14px;position:relative;z-index:2}
+.pf-ava img{width:124px;height:124px;border-radius:50%;object-fit:cover;border:4px solid #fff;outline:3px solid var(--gold);
+  box-shadow:0 14px 34px rgba(12,35,64,.35),0 0 0 10px rgba(201,162,39,.1);
+  animation:glowPulse 4s ease-in-out infinite}
+.pf-ava .p-empty{width:124px;height:124px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:52px;border:4px solid #fff;outline:3px solid var(--gold);
+  background:linear-gradient(135deg,var(--gold-bg),#f7e9bd);
+  box-shadow:0 14px 34px rgba(12,35,64,.35),0 0 0 10px rgba(201,162,39,.1)}
+.pf-name{margin:0;font-size:30px;font-weight:800;color:var(--navy);letter-spacing:.2px;line-height:1.25}
+.pf-card h3::before{display:none}
+.pf-un{margin:4px 0 12px;color:var(--gold-deep);font-weight:600;letter-spacing:2px;font-size:13.5px}
+.pf-info{margin:22px auto 0;max-width:450px;display:flex;flex-direction:column;gap:10px;text-align:left}
+.pf-row{display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:linear-gradient(135deg,#f7fafd,#eef3fa);border:1px solid rgba(219,228,240,.8);
+  border-radius:14px;padding:13px 18px;transition:transform .2s var(--ease),box-shadow .2s}
+.pf-row:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(22,56,82,.1)}
+.pf-row .k{color:var(--muted);font-size:13.5px;font-weight:600;display:flex;align-items:center;gap:9px}
+.pf-row .k svg{width:17px;height:17px;color:var(--gold-deep);flex-shrink:0}
+.pf-row .v{font-weight:700;color:var(--navy-soft);font-size:14.5px}
+@media(max-width:640px){.pf-name{font-size:25px}.pf-main{padding:0 16px 22px}}

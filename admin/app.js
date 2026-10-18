@@ -630,17 +630,21 @@ async function vProfile(username){
     const act=mine.filter(l=>l.status!=='revoked').length, rev=mine.length-act;
     const q=await quotaOf(target);
     const canEdit=isMain()||target===SESS.user.username;
+    const icPhone='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M11 18.5h2"/></svg>';
+    const icCal='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>';
+    const icUser='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>';
+    const pfAva=u.photo?'<div class="pf-ava"><img src="'+u.photo+'" alt=""></div>':'<div class="pf-ava"><div class="p-empty">\uD83D\uDC64</div></div>';
     v.innerHTML='<div class="page-head"><h2>প্রোফাইল</h2>'+
       (canEdit?'<button class="btn btn-ghost btn-sm" id="pe">বদলাও</button>':'')+'</div>'+
-    '<div class="card pf-head"><div class="pf-top">'+photoHTML({photo:u.photo},'p-photo pf-pic')+
-      '<div class="pf-id"><h3>'+esc(dispName(u))+'</h3>'+
-      '<p class="p-mad">@'+esc(u.username)+'</p>'+
-      '<div>'+(u.role==='main'?'<span class="badge gold">মেইন অ্যাডমিন</span>':'<span class="badge on">সাব-অ্যাডমিন</span>')+'</div></div></div>'+
-      '<dl class="kv">'+
-      (u.phone?'<dt>মোবাইল</dt><dd>'+esc(u.phone)+'</dd>':'')+
-      '<dt>যোগ দিয়েছে</dt><dd>'+esc(fmtDate(u.created_at))+'</dd>'+
-      (u.created_by?'<dt>যোগ করেছে</dt><dd>'+esc(u.created_by)+'</dd>':'')+
-      '</dl></div>'+
+    '<div class="card pf-card"><div class="pf-cover"></div><div class="pf-main">'+pfAva+
+      '<h3 class="pf-name">'+esc(dispName(u))+'</h3>'+
+      '<p class="pf-un">@'+esc(u.username)+'</p>'+
+      '<div>'+(u.role==='main'?'<span class="badge gold">মেইন অ্যাডমিন</span>':'<span class="badge on">সাব-অ্যাডমিন</span>')+'</div>'+
+      '<div class="pf-info">'+
+      (u.phone?'<div class="pf-row"><span class="k">'+icPhone+'মোবাইল</span><span class="v">'+esc(u.phone)+'</span></div>':'')+
+      '<div class="pf-row"><span class="k">'+icCal+'যোগ দিয়েছে</span><span class="v">'+esc(fmtDate(u.created_at))+'</span></div>'+
+      (u.created_by?'<div class="pf-row"><span class="k">'+icUser+'যোগ করেছে</span><span class="v">'+esc(u.created_by)+'</span></div>':'')+
+      '</div></div></div>'+
     '<div class="card"><h3>লাইসেন্সের হিসাব</h3><div class="vstats">'+
       '<div class="vstat v1"><div class="n">'+mine.length+'</div><div class="l">মোট বানিয়েছে</div></div>'+
       '<div class="vstat v3"><div class="n">'+act+'</div><div class="l">চালু</div></div>'+
