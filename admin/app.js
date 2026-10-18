@@ -681,6 +681,29 @@ async function vProfile(username){
       (q.limit?'<h3 style="margin-top:6px">লাইসেন্স লিমিট</h3>'+quotaBar(q):'<p class="hint">লাইসেন্স লিমিট: সীমা নেই (আনলিমিটেড)</p>')+'</div>';
     countUp(v);
     const pe=$('#pe'); if(pe) pe.onclick=()=>vEditProfile(target);
+    if(isMain()&&u.role!=='main'){
+      const qc=document.createElement('div');
+      qc.className='card'; qc.style.borderRight='4px solid var(--gold)';
+      qc.innerHTML='<h3>লাইসেন্সের সংখ্যা নির্ধারণ করো</h3><div id="qerr" class="err" style="display:none"></div>'+
+        '<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:160px"><label class="f" style="margin-top:0">কতটি লাইসেন্স বানাতে পারবে</label>'+
+        '<input type="number" id="qlm" min="0" value="'+(u.license_limit||'')+'" placeholder="যেমন: ২০"></div>'+
+        '<button class="btn btn-gold" id="qsv">সেভ করো</button></div>'+
+        '<p class="hint">খালি বা ০ রাখলে সীমা থাকবে না। সেভ করার সাথে সাথে তার ড্যাশবোর্ডের মিটারে দেখা যাবে।</p>';
+      v.insertBefore(qc, v.children[2]||null);
+      $('#qsv').onclick=async ev=>{
+        const b=ev.target; busy(b,true);
+        try{
+          const n=parseInt($('#qlm').value,10);
+          const users2=await DB.loadUsers(true);
+          const uu=users2.find(x=>x.username===target);
+          uu.license_limit=n>0?n:null;
+          await DB.saveUsers(users2);
+          vProfile(target);
+        }catch(e){ const qe=$('#qerr'); if(qe){ qe.textContent=e.message; qe.style.display='block'; } }
+        busy(b,false);
+      };
+    }
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
 async function vEditProfile(username){
