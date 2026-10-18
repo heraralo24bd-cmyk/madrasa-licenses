@@ -248,6 +248,25 @@ async function quotaOf(username){
   return {limit:limit,used:used,left:Math.max(0,limit-used)};
 }
 const dispName=u=>(u&&(u.display_name||u.username))||'';
+
+/* গোল মিটার: লাইসেন্স কোটা (তিন রঙের ডোনাট) */
+function quotaDonut(q, actN, revN){
+  const total=q.limit, r=70, c=2*Math.PI*r;
+  const a=actN/total*c, rv=revN/total*c, rm=Math.max(0,(total-q.used))/total*c;
+  const seg=(len,off,color)=>'<circle cx="90" cy="90" r="'+r+'" fill="none" stroke="'+color+
+    '" stroke-width="24" stroke-dasharray="'+len.toFixed(1)+' '+c.toFixed(1)+
+    '" stroke-dashoffset="'+(-off).toFixed(1)+'" transform="rotate(-90 90 90)" class="dq-seg"/>';
+  return '<div class="dq-wrap"><svg viewBox="0 0 180 180" class="dq">'+
+    '<circle cx="90" cy="90" r="'+r+'" fill="none" stroke="#e6ecf4" stroke-width="24"/>'+
+    seg(a,0,'#147958')+seg(rv,a,'#c0392b')+seg(rm,a+rv,'#c9a227')+
+    '<text x="90" y="84" text-anchor="middle" class="dq-num">'+q.left+'</text>'+
+    '<text x="90" y="108" text-anchor="middle" class="dq-lab">বাকি আছে</text></svg>'+
+    '<div class="dq-legend">'+
+    '<div class="dq-li"><span class="dot" style="background:#147958"></span>বানিয়েছে <b>'+q.used+'</b></div>'+
+    '<div class="dq-li"><span class="dot" style="background:#c0392b"></span>বাতিল <b>'+revN+'</b></div>'+
+    '<div class="dq-li"><span class="dot" style="background:#c9a227"></span>মোট লিমিট <b>'+total+'</b></div>'+
+    '</div></div>';
+}
 function quotaBar(q){
   if(!q.limit) return '<span class="hint">সীমা নেই</span>';
   const pct=Math.min(100,Math.round(q.used/q.limit*100));
@@ -379,6 +398,16 @@ async function vDash(){
     stat('s4',SI.clock,exp,'৩০ দিনে শেষ')+'</div>'+
     '<div class="card"><h3>সাম্প্রতিক</h3>'+licTable(rows.slice(0,6))+'</div>';
     wireRows(v); countUp(v);
+    if(!isMain()){
+      const q=await quotaOf(SESS.user.username);
+      if(q.limit){
+        const act=rows.filter(l=>l.status!=='revoked').length, rev=rows.length-act;
+        const box=document.createElement('div');
+        box.className='card dq-card';
+        box.innerHTML='<h3>তোমার লাইসেন্স কোটা</h3>'+quotaDonut(q,act,rev);
+        v.insertBefore(box, v.children[2]||null);
+      }
+    }
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
 function licRow(l){
