@@ -336,3 +336,71 @@ input[type=file]:hover{border-color:var(--teal);background:var(--teal-bg)}
 .dh-addr svg{width:16px;height:16px;color:var(--gold-deep);flex-shrink:0}
 .dh-edit{margin-left:auto;align-self:flex-start;margin-top:14px}
 @media(max-width:640px){.dh-name{font-size:22px}.dh-main{padding:0 16px 16px}.dh-edit{margin-top:8px}}
+
+/* ---------- চ্যাট ---------- */
+.nav-badge{display:inline-flex;align-items:center;justify-content:center;min-width:20px;height:20px;
+  padding:0 6px;border-radius:12px;background:linear-gradient(135deg,#e05a4e,#96281b);color:#fff;
+  font-size:11px;font-weight:800;margin-left:auto;box-shadow:0 2px 8px rgba(192,57,43,.5);
+  animation:glowPulse 2s ease-in-out infinite}
+/* ফ্লোটিং বাটন (সাব-অ্যাডমিন) */
+.chat-fab{position:fixed;right:22px;bottom:22px;width:62px;height:62px;border-radius:50%;border:0;cursor:pointer;z-index:60;
+  background:linear-gradient(135deg,#1aa874,#0b4f3a);color:#fff;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 12px 30px rgba(20,121,88,.45);transition:transform .25s var(--ease)}
+.chat-fab:hover{transform:scale(1.1) rotate(6deg)}
+.chat-fab svg{width:30px;height:30px}
+.chat-badge{position:absolute;top:-4px;right:-4px;min-width:24px;height:24px;padding:0 6px;border-radius:14px;
+  background:linear-gradient(135deg,#e05a4e,#96281b);color:#fff;font-size:12px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;border:2px solid #fff;
+  box-shadow:0 4px 12px rgba(192,57,43,.5);animation:glowPulse 2s ease-in-out infinite}
+.chat-panel{position:fixed;right:22px;bottom:96px;width:380px;max-width:calc(100vw - 44px);height:520px;max-height:calc(100vh - 130px);
+  z-index:60;background:#fff;border-radius:22px;box-shadow:var(--shadow-lg);display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid rgba(219,228,240,.8);animation:pop .3s var(--ease) both}
+.chat-head{background:linear-gradient(135deg,#0a1f38,#1d4a73);color:#fff;padding:16px 18px;display:flex;
+  align-items:center;justify-content:space-between}
+.chat-head b{font-size:16px;font-family:"Baloo Da 2",sans-serif}
+.chat-head small{display:block;color:var(--gold-light);font-size:12px;opacity:.9}
+.chat-head button{background:rgba(255,255,255,.15);border:0;color:#fff;width:32px;height:32px;border-radius:50%;
+  cursor:pointer;font-size:14px;transition:background .2s}
+.chat-head button:hover{background:rgba(255,255,255,.3)}
+.chat-msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;
+  background:linear-gradient(180deg,#f4f7fb,#eef3fa)}
+.msg{display:flex;animation:rise .25s var(--ease)}
+.msg.me{justify-content:flex-end}
+.msg.them{justify-content:flex-start}
+.bub{max-width:78%;padding:10px 14px;border-radius:16px;font-size:14.5px;line-height:1.55;position:relative;
+  box-shadow:0 3px 10px rgba(12,35,64,.1);word-break:break-word}
+.msg.me .bub{background:linear-gradient(135deg,#1aa874,#0d5c43);color:#fff;border-bottom-right-radius:5px}
+.msg.them .bub{background:#fff;color:var(--text);border-bottom-left-radius:5px;border:1px solid rgba(219,228,240,.7)}
+.bub .mt{display:block;font-size:10.5px;opacity:.7;margin-top:5px;text-align:right}
+.chat-in{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line);background:#fff}
+.chat-in input{flex:1;margin:0}
+.chat-in .btn{padding:10px 16px}
+/* মেইন অ্যাডমিন চ্যাট পেজ */
+.chat-card{padding:0;overflow:hidden}
+.chat-layout{display:flex;min-height:560px}
+.chat-threads{width:320px;flex-shrink:0;border-right:1px solid var(--line);overflow-y:auto;background:#f8fafd}
+.th-item{display:flex;align-items:center;gap:12px;width:100%;padding:14px 16px;border:0;border-bottom:1px solid var(--line);
+  background:transparent;cursor:pointer;font-family:inherit;text-align:left;transition:background .2s;position:relative}
+.th-item:hover{background:#eef3fa}
+.th-item.active{background:linear-gradient(90deg,rgba(201,162,39,.18),transparent);border-left:4px solid var(--gold)}
+.th-ava{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--gold-bg),#f7e9bd);
+  display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:2px solid var(--gold)}
+.th-mid{flex:1;min-width:0}
+.th-mid b{display:block;font-size:14.5px;color:var(--navy)}
+.th-mid small{display:block;color:var(--muted);font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.th-badge{min-width:22px;height:22px;padding:0 6px;border-radius:12px;background:linear-gradient(135deg,#e05a4e,#96281b);
+  color:#fff;font-size:11px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+.th-time{font-size:11px;color:var(--muted);align-self:flex-start}
+.chat-conv{flex:1;display:flex;flex-direction:column;min-width:0}
+.cv-head{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line);
+  background:linear-gradient(135deg,#f8fafd,#eef3fa)}
+.cv-head b{font-size:16px;color:var(--navy);font-family:"Baloo Da 2",sans-serif}
+.cv-head small{display:block;color:var(--muted);font-size:12px}
+.cv-msgs{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:10px;min-height:300px;
+  background:linear-gradient(180deg,#f4f7fb,#eef3fa)}
+.cv-in{display:flex;gap:10px;padding:14px;border-top:1px solid var(--line);background:#fff}
+.cv-in input{flex:1;margin:0}
+@media(max-width:760px){
+  .chat-layout{flex-direction:column}
+  .chat-threads{width:100%;border-right:0;border-bottom:1px solid var(--line);max-height:220px}
+}
