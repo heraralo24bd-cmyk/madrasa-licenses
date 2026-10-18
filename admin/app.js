@@ -69,6 +69,41 @@ async function decWithKey(key, enc){
   const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:hexToBytes(enc.iv)}, key, b64urlDecode(enc.ct));
   return JSON.parse(td.decode(pt));
 }
+/* ---------- চ্যাট ---------- */
+function chatThread(chat, username){
+  chat.threads=chat.threads||{};
+  return chat.threads[username]=chat.threads[username]||[];
+}
+async function chatSend(toUser, text){
+  text=String(text||'').trim().slice(0,1000);
+  if(!text) return;
+  const chat=await DB.loadChat(true);
+  const th=chatThread(chat,toUser);
+  th.push({from:SESS.user.username,text:text,at:nowSec(),seen:false});
+  if(th.length>200) th.splice(0,th.length-200);
+  await DB.saveChat(chat);
+}
+function chatUnreadSub(chat, username){
+  return chatThread(chat,username).filter(m=>m.from!==username&&!m.seen).length;
+}
+function chatUnreadMain(chat, mainUser){
+  let n=0;
+  for(const k in (chat.threads||{})) n+=chatThread(chat,k).filter(m=>m.from!==mainUser&&!m.seen).length;
+  return n;
+}
+async function chatMarkSeen(username){
+  const chat=await DB.loadChat(true);
+  const th=chatThread(chat,username);
+  let ch=false;
+  th.forEach(m=>{ if(m.from!==SESS.user.username&&!m.seen){ m.seen=true; ch=true; } });
+  if(ch) await DB.saveChat(chat);
+  return chat;
+}
+function chatTime(at){
+  try{ return new Date(at*1000).toLocaleString('bn-BD',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'}); }
+  catch(e){ return ''; }
+}
+
 /* প্যাকেজ থেকে কার্যকর লিমিট */
 function pkgLimit(u){
   if(u.packages&&u.packages.length)
@@ -174,6 +209,16 @@ const DB = {
   async saveLicenses(l){
     await GH.putFile('data/licenses.json', JSON.stringify(l,null,2), SESS.secrets.pat, 'Update licenses');
     this.licenses=l;
+  },
+  chat:null,
+  async loadChat(force){
+    if(this.chat&&!force) return this.chat;
+    const f=await GH.getFile('data/chat.json', SESS.secrets&&SESS.secrets.pat);
+    this.chat=f?JSON.parse(f.content):{threads:{}}; return this.chat;
+  },
+  async saveChat(c){
+    await GH.putFile('data/chat.json', JSON.stringify(c), SESS.secrets.pat, 'Update chat');
+    this.chat=c;
   },
   async publishRevocations(){
     const list=await this.loadLicenses();
@@ -350,6 +395,7 @@ list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2
 plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
 users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c2.8.4 5 2.6 5 5.5"/></svg>',
 user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>',
+chat:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1L3 20l1.2-4.1A8.5 8.5 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></svg>',
 gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>'};
 const SI={
 box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
@@ -373,24 +419,105 @@ function countUp(root){
     });
   }catch(_){}
 }
+/* ---------- চ্যাট UI ---------- */
+let CHAT_TIMER=null, CHAT_OPEN=null, CHAT_USERS=[];
+function chatPollStop(){ if(CHAT_TIMER){ clearInterval(CHAT_TIMER); CHAT_TIMER=null; } }
+function chatPollStart(){ chatPollStop(); CHAT_TIMER=setInterval(chatPollTick,15000); chatPollTick(); }
+async function chatPollTick(){
+  try{
+    if(!SESS.user) return;
+    const chat=await DB.loadChat(true);
+    if(isMain()){
+      const n=chatUnreadMain(chat,SESS.user.username);
+      const b=document.querySelector('#navChatB');
+      if(b){ b.style.display=n?'inline-flex':'none'; b.textContent=n>99?'99+':n; }
+      if(CV==='chat') vChatRender(chat);
+    }else{
+      const me=SESS.user.username;
+      const n=chatUnreadSub(chat,me);
+      const b=document.querySelector('#chatBadge');
+      if(b){ b.style.display=n?'flex':'none'; b.textContent=n>99?'99+':n; }
+      const p=document.querySelector('#chatPanel');
+      if(p&&p.style.display!=='none'){
+        chatWidgetRender(chat);
+        const th=chatThread(chat,me);
+        if(th.some(m=>m.from!==me&&!m.seen)) await chatMarkSeen(me);
+      }
+    }
+  }catch(e){}
+}
+function chatBubble(m,mine){
+  return '<div class="msg '+(mine?'me':'them')+'"><div class="bub">'+esc(m.text)+'<span class="mt">'+chatTime(m.at)+'</span></div></div>';
+}
+function chatWidgetInit(){
+  if(isMain()) return;
+  if(!document.querySelector('#chatFab')){
+    const w=document.createElement('div');
+    w.innerHTML='<button id="chatFab" class="chat-fab" title="চ্যাট"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.5 8.5 0 0 1-8.5 8.5c-1.5 0-3-.4-4.2-1L3 20l1.2-4.1A8.5 8.5 0 1 1 21 11.5z"/></svg><span id="chatBadge" class="chat-badge" style="display:none">0</span></button>'+
+    '<div id="chatPanel" class="chat-panel" style="display:none">'+
+    '<div class="chat-head"><div><b>সাপোর্ট চ্যাট</b><small>মেইন অ্যাডমিনের সাথে কথা বলো</small></div><button id="chatX">✕</button></div>'+
+    '<div id="chatMsgs" class="chat-msgs"></div>'+
+    '<div class="chat-in"><input type="text" id="chatTxt" placeholder="লেখো…" maxlength="1000" autocomplete="off"><button id="chatGo" class="btn btn-primary">➤</button></div></div>';
+    document.body.appendChild(w);
+    document.querySelector('#chatFab').onclick=()=>{
+      const p=document.querySelector('#chatPanel'), open=p.style.display!=='none';
+      p.style.display=open?'none':'flex';
+      if(!open){ chatWidgetLoad(); }
+    };
+    document.querySelector('#chatX').onclick=()=>{ document.querySelector('#chatPanel').style.display='none'; };
+    document.querySelector('#chatGo').onclick=chatWidgetSend;
+    document.querySelector('#chatTxt').addEventListener('keydown',e=>{ if(e.key==='Enter') chatWidgetSend(); });
+  }
+  chatPollStart();
+}
+async function chatWidgetLoad(){
+  const chat=await chatMarkSeen(SESS.user.username);
+  chatWidgetRender(chat);
+  const ms=document.querySelector('#chatMsgs'); if(ms) ms.scrollTop=ms.scrollHeight;
+}
+function chatWidgetRender(chat){
+  const ms=document.querySelector('#chatMsgs'); if(!ms) return;
+  const me=SESS.user.username, th=chatThread(chat,me);
+  const nearBottom=ms.scrollHeight-ms.scrollTop-ms.clientHeight<80;
+  ms.innerHTML=th.length?th.map(m=>chatBubble(m,m.from===me)).join(''):'<p class="hint" style="text-align:center;padding:20px">কোনো সমস্যা হলে এখানে লেখো।<br>মেইন অ্যাডমিন দেখে জবাব দেবে।</p>';
+  if(nearBottom) ms.scrollTop=ms.scrollHeight;
+}
+async function chatWidgetSend(){
+  const inp=document.querySelector('#chatTxt'); if(!inp) return;
+  const t=inp.value.trim(); if(!t) return;
+  inp.value='';
+  try{
+    await chatSend(SESS.user.username,t);
+    const chat=await DB.loadChat(true);
+    chatWidgetRender(chat);
+    const ms=document.querySelector('#chatMsgs'); if(ms) ms.scrollTop=ms.scrollHeight;
+  }catch(e){}
+}
+function chatWidgetKill(){
+  chatPollStop();
+  const f=document.querySelector('#chatFab'); if(f) f.parentNode.remove();
+}
+
 function vShell(view){
   CV=view||'dashboard';
   if(!SESS.user){ vLogin(); return; }
   const nav=[['dashboard','ড্যাশবোর্ড',I.dash],['licenses','লাইসেন্স',I.list],['new','নতুন লাইসেন্স',I.plus]];
   if(isMain()) nav.push(['users','সাব-অ্যাডমিন',I.users]);
+  if(isMain()) nav.push(['chat','চ্যাট',I.chat]);
   nav.push(['profile','প্রোফাইল',I.user]);
   nav.push(['settings','সেটিংস',I.gear]);
   app.innerHTML=
   '<div class="shell"><aside class="sidebar">'+
   '<div class="brand"><img class="logo" src="logo.webp" alt=""><div class="bt">লাইসেন্স মেশিন<small>মাদরাসা ম্যানেজার</small></div></div>'+
-  '<nav class="snav">'+nav.map(n=>'<button data-v="'+n[0]+'" class="'+(CV===n[0]?'active':'')+'">'+n[2]+'<span>'+n[1]+'</span></button>').join('')+'</nav>'+
+  '<nav class="snav">'+nav.map(n=>'<button data-v="'+n[0]+'" class="'+(CV===n[0]?'active':'')+'">'+n[2]+'<span>'+n[1]+'</span>'+(n[0]==='chat'?'<span class="nav-badge" id="navChatB" style="display:none">0</span>':'')+'</button>').join('')+'</nav>'+
   '<div class="side-foot"><div class="who"><b>'+esc(SESS.user.username)+'</b>'+(isMain()?'<span class="badge gold">মেইন</span>':'<span class="badge on">সাব</span>')+'</div>'+
   '<button class="btn btn-ghost btn-sm" id="slo">লগআউট</button></div>'+
   '</aside><div class="content"><div class="main" id="view"></div>'+
   '<div class="footer-note">মাদরাসা ম্যানেজার • লাইসেন্স মেশিন</div></div></div>';
   $$('.snav button').forEach(b=>b.onclick=()=>vShell(b.dataset.v));
-  $('#slo').onclick=()=>{ SESS.user=null; SESS.secrets=null; SESS.pw=null; vLogin('লগআউট হয়েছে।'); };
-  ({dashboard:vDash,licenses:vLicenses,'new':vNew,users:vUsers,profile:()=>vProfile(),settings:vSettings}[CV]||vDash)();
+  $('#slo').onclick=()=>{ chatWidgetKill(); SESS.user=null; SESS.secrets=null; SESS.pw=null; SESS.viewKey=null; vLogin('লগআউট হয়েছে।'); };
+  ({dashboard:vDash,licenses:vLicenses,'new':vNew,users:vUsers,chat:vChat,profile:()=>vProfile(),settings:vSettings}[CV]||vDash)();
+  if(!isMain()) chatWidgetInit(); else chatPollStart();
 }
 
 /* ---------- পাসওয়ার্ড দেখো / বদলাও (মেইন) ---------- */
@@ -919,6 +1046,77 @@ async function vUsers(){
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
 
+/* ---------- মেইন অ্যাডমিন চ্যাট ---------- */
+async function vChat(){
+  if(!isMain()){ document.querySelector('#view').innerHTML='<div class="err">শুধু মেইন অ্যাডমিন।</div>'; return; }
+  CHAT_OPEN=null;
+  const v=document.querySelector('#view');
+  v.innerHTML='<div class="page-head"><h2>চ্যাট</h2></div>'+
+  '<div class="card chat-card"><div class="chat-layout">'+
+  '<div class="chat-threads" id="chTh"><div class="boot">আসছে…</div></div>'+
+  '<div class="chat-conv" id="chCv"><p class="hint" style="padding:30px;text-align:center">বাম থেকে একজন সাব-অ্যাডমিন বাছো।</p></div>'+
+  '</div></div>';
+  try{
+    CHAT_USERS=await DB.loadUsers(true);
+    const chat=await DB.loadChat(true);
+    vChatRender(chat);
+  }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+function vChatRender(chat){
+  const thEl=document.querySelector('#chTh'); if(!thEl) return;
+  const me=SESS.user.username;
+  const names={}; CHAT_USERS.forEach(u=>names[u.username]=dispName(u));
+  const keys=Object.keys(chat.threads||{}).sort((a,b)=>{
+    const ta=(chat.threads[a]||[]), tb=(chat.threads[b]||[]);
+    return ((tb[tb.length-1]||{}).at||0)-((ta[ta.length-1]||{}).at||0);
+  });
+  thEl.innerHTML=keys.length?keys.map(k=>{
+    const th=chat.threads[k], last=th[th.length-1]||{};
+    const un=th.filter(m=>m.from!==me&&!m.seen).length;
+    return '<button class="th-item'+(CHAT_OPEN===k?' active':'')+'" data-th="'+esc(k)+'">'+
+    '<div class="th-ava">👤</div><div class="th-mid"><b>'+esc(names[k]||k)+'</b>'+
+    '<small>'+esc(String(last.text||'').slice(0,40))+'</small></div>'+
+    (un?'<span class="th-badge">'+un+'</span>':'')+
+    '<small class="th-time">'+chatTime(last.at)+'</small></button>';
+  }).join(''):'<p class="hint" style="padding:20px">এখনো কেউ মেসেজ পাঠায়নি।</p>';
+  thEl.querySelectorAll('[data-th]').forEach(b=>b.onclick=()=>{ CHAT_OPEN=b.dataset.th; vChatOpen(); });
+  if(CHAT_OPEN){
+    const k=CHAT_OPEN, me=SESS.user.username, th=chatThread(chat,k);
+    const ms=document.querySelector('#cvMsgs');
+    if(ms){
+      const cur=ms.querySelectorAll('.msg').length;
+      if(cur!==th.length){
+        const nearBottom=ms.scrollHeight-ms.scrollTop-ms.clientHeight<100;
+        ms.innerHTML=th.length?th.map(m=>chatBubble(m,m.from===me)).join(''):'<p class="hint" style="text-align:center">এখনো কথা হয়নি।</p>';
+        if(nearBottom||th.length>cur) ms.scrollTop=ms.scrollHeight;
+        if(th.some(m=>m.from!==me&&!m.seen)) chatMarkSeen(k);
+      }
+    }
+  }
+}
+async function vChatOpen(soft){
+  const cv=document.querySelector('#chCv'); if(!cv||!CHAT_OPEN) return;
+  const me=SESS.user.username, k=CHAT_OPEN;
+  const names={}; CHAT_USERS.forEach(u=>names[u.username]=dispName(u));
+  let chat=await DB.loadChat(true);
+  let th=chatThread(chat,k);
+  if(th.some(m=>m.from!==me&&!m.seen)) chat=await chatMarkSeen(k), th=chatThread(chat,k);
+  const msId='cvMsgs';
+  cv.innerHTML='<div class="cv-head"><div class="th-ava">👤</div><div><b>'+esc(names[k]||k)+'</b><small>@'+esc(k)+'</small></div></div>'+
+  '<div class="cv-msgs" id="'+msId+'">'+(th.length?th.map(m=>chatBubble(m,m.from===me)).join(''):'<p class="hint" style="text-align:center">এখনো কথা হয়নি।</p>')+'</div>'+
+  '<div class="cv-in"><input type="text" id="cvTxt" placeholder="জবাব লেখো…" maxlength="1000" autocomplete="off"><button id="cvGo" class="btn btn-primary">পাঠাও</button></div>';
+  document.querySelectorAll('.th-item').forEach(b=>b.classList.toggle('active',b.dataset.th===k));
+  const ms=document.querySelector('#'+msId); if(ms) ms.scrollTop=ms.scrollHeight;
+  const go=async()=>{
+    const inp=document.querySelector('#cvTxt'); const t=inp.value.trim(); if(!t) return;
+    inp.value='';
+    try{ await chatSend(k,t); vChatOpen(true); }catch(e){}
+  };
+  document.querySelector('#cvGo').onclick=go;
+  document.querySelector('#cvTxt').addEventListener('keydown',e=>{ if(e.key==='Enter') go(); });
+  if(!soft) document.querySelector('#cvTxt').focus();
+}
+
 /* ---------- settings ---------- */
 function vSettings(){
   const v=$('#view');
@@ -952,7 +1150,7 @@ function vSettings(){
     }catch(e){ showErr(e.message); }
     busy(b,false);
   };
-  $('#lo').onclick=()=>{ SESS.user=null; SESS.secrets=null; SESS.pw=null; vLogin('লগআউট হয়েছে।'); };
+  $('#lo').onclick=()=>{ chatWidgetKill(); SESS.user=null; SESS.secrets=null; SESS.pw=null; SESS.viewKey=null; vLogin('লগআউট হয়েছে।'); };
 }
 
 /* ---------- init ---------- */
