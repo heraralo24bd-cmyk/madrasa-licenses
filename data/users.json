@@ -9,6 +9,10 @@
     "secrets_enc": {
       "iv": "80ae01999de51124f1e9361e",
       "ct": "W2KWuv3If-Qx-iLtkjx8T_a6tCd5E7_KWTlD7z71mNewtJcqTPxAtUYdL3gOPLzq8moq2HEeB4V-Z5S0ZPlpuQ9zvyBOLoubRt_3DUqEad_B93wDkEu0OrYub9dIX2XtBs8m_KcS2o-eNLRdRwMUqtgJqtGanJA"
+    },
+    "pw_enc": {
+      "iv": "07a8fb21f727fda00cfcbbeb",
+      "ct": "QCALgRJVHnNRfouCDX0liDokSMC8Ur2NtAcAmuZqr_eA"
     }
   },
   {
