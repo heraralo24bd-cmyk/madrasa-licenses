@@ -142,3 +142,28 @@ tr.clickable{cursor:pointer} tr.clickable:hover td{background:#f2f8ff}
   .side-foot{border-top:0;padding-top:10px}
 }
 @media(max-width:640px){.main{padding:16px 12px}.kv{grid-template-columns:1fr}}
+
+/* ---------- customer dashboard ---------- */
+.p-card{border-top:4px solid var(--gold)}
+.p-top{display:flex;gap:18px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.p-photo{width:96px;height:96px;border-radius:50%;object-fit:cover;border:3px solid var(--gold);
+  box-shadow:0 6px 18px rgba(201,162,39,.3);flex-shrink:0;background:var(--gold-bg)}
+.p-photo.p-empty{display:flex;align-items:center;justify-content:center;font-size:44px;background:var(--gold-bg)}
+.p-thumb{width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--gold);flex-shrink:0;background:var(--gold-bg)}
+.p-thumb.p-empty{display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.c-cell{display:flex;align-items:center;gap:10px}
+.p-id h3{margin:0 0 4px;color:var(--navy);font-size:20px}
+.p-mad{margin:0 0 8px;color:var(--muted);font-size:14px}
+.vstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:16px}
+.vstat{border-radius:14px;padding:18px 16px;text-align:center;color:#fff;position:relative;overflow:hidden;
+  box-shadow:0 8px 20px rgba(12,35,64,.18)}
+.vstat .n{font-size:32px;font-weight:800;line-height:1.1}
+.vstat .l{font-size:12.5px;opacity:.9;margin-top:4px}
+.vstat.v1{background:linear-gradient(135deg,#1d4a73,#0c2340)}
+.vstat.v2{background:linear-gradient(135deg,#e0b83c,#8a6d1c)}
+.vstat.v3{background:linear-gradient(135deg,#17a674,#0d5c43)}
+.pbar{height:14px;background:#e6ecf4;border-radius:10px;overflow:hidden;margin-top:4px}
+.pfill{height:100%;border-radius:10px;background:linear-gradient(90deg,var(--teal),#1d4a73);transition:width .5s ease}
+input[type=file]{width:100%;padding:10px;font-size:14px;border:1.5px dashed var(--line);border-radius:10px;
+  background:#fbfdff;font-family:inherit;color:var(--text);cursor:pointer}
+input[type=file]:hover{border-color:var(--teal)}

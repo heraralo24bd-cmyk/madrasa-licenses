@@ -194,6 +194,49 @@ function visibleLicenses(list){
   return rows.sort((a,b)=>b.issued_at-a.issued_at);
 }
 
+/* ---------- customer profile + validity dashboard ---------- */
+function custOf(l){ return (l&&l.customer)||{}; }
+function validityInfo(l){
+  const t=nowSec();
+  if(l.expires_at==null)
+    return {life:true, totalTxt:'আজীবন', elapsed:Math.max(0,Math.floor((t-l.issued_at)/86400)), leftTxt:'∞', pct:0};
+  const total=Math.max(1,Math.round((l.expires_at-l.issued_at)/86400));
+  const elapsed=Math.max(0,Math.floor((t-l.issued_at)/86400));
+  const left=Math.ceil((l.expires_at-t)/86400);
+  return {life:false, total:total, elapsed:elapsed, left:left,
+    totalTxt:String(total), elapsedTxt:String(elapsed),
+    leftTxt:left<0?'শেষ':String(left),
+    pct:Math.min(100,Math.max(0,Math.round(Math.min(elapsed,total)/total*100)))};
+}
+function photoHTML(c,cls){
+  cls=cls||'p-photo';
+  if(c&&c.photo) return '<img class="'+cls+'" src="'+c.photo+'" alt="ছবি">';
+  return '<div class="'+cls+' p-empty">👤</div>';
+}
+function readPhoto(file){
+  return new Promise((res,rej)=>{
+    if(!file) return res('');
+    if(!/^image\//.test(file.type||'')) return rej(new Error('ছবির ফাইল দাও।'));
+    if(file.size>8*1024*1024) return rej(new Error('ছবি ৮ MB-এর কম দাও।'));
+    const img=new Image();
+    img.onload=()=>{
+      try{
+        const k=200/Math.max(img.width,img.height);
+        const cv=document.createElement('canvas');
+        cv.width=Math.max(1,Math.round(img.width*k)); cv.height=Math.max(1,Math.round(img.height*k));
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        res(cv.toDataURL('image/jpeg',0.72));
+      }catch(e){ rej(new Error('ছবি পড়া যায়নি।')); }
+    };
+    img.onerror=()=>rej(new Error('ছবি পড়া যায়নি।'));
+    const r=new FileReader();
+    r.onload=e=>{ img.src=e.target.result; };
+    r.onerror=()=>rej(new Error('ছবি পড়া যায়নি।'));
+    r.readAsDataURL(file);
+  });
+}
+const canEditL=l=>isMain()||(l.issued_by===SESS.user.username);
+
 /* ---------- login ---------- */
 function vLogin(msg){
   app.innerHTML=
@@ -303,7 +346,8 @@ async function vDash(){
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
 function licRow(l){
-  return '<tr class="clickable" data-id="'+esc(l.license_id)+'"><td><b>'+esc(l.customer_name)+'</b></td>'+
+  const c=custOf(l);
+  return '<tr class="clickable" data-id="'+esc(l.license_id)+'"><td><div class="c-cell">'+photoHTML(c,'p-thumb')+'<b>'+esc(l.customer_name)+'</b></div></td>'+
   '<td class="mono">'+esc(l.license_id.slice(0,10))+'…</td><td>'+esc(validity(l))+'</td><td>'+badge(l)+'</td>'+
   (isMain()?'<td>'+esc(l.issued_by||'—')+'</td>':'')+'<td>'+esc(fmtDate(l.issued_at))+'</td></tr>';
 }
@@ -312,7 +356,7 @@ function licTable(rows){
   return '<div class="tbl-wrap"><table><thead><tr><th>গ্রাহক</th><th>লাইসেন্স</th><th>মেয়াদ</th><th>অবস্থা</th>'+
   (isMain()?'<th>বানিয়েছে</th>':'')+'<th>তারিখ</th></tr></thead><tbody>'+rows.map(licRow).join('')+'</tbody></table></div>';
 }
-const wireRows=r=>$$('tr.clickable',r).forEach(t=>t.onclick=()=>vDetail(t.dataset.id));
+const wireRows=r=>$$('tr.clickable',r).forEach(t=>t.onclick=()=>vCustomer(t.dataset.id));
 
 /* ---------- licenses ---------- */
 async function vLicenses(){
@@ -327,7 +371,7 @@ async function vLicenses(){
     const render=()=>{
       const q=$('#q').value.trim().toLowerCase(), f=$('#f').value;
       let rows=all;
-      if(q) rows=rows.filter(l=>(l.customer_name+' '+l.license_id).toLowerCase().includes(q));
+      if(q) rows=rows.filter(l=>{ const c=custOf(l); return (l.customer_name+' '+(c.mobile||'')+' '+(c.madrasa||'')+' '+l.license_id).toLowerCase().includes(q); });
       if(f==='on') rows=rows.filter(l=>l.status!=='revoked');
       if(f==='off') rows=rows.filter(l=>l.status==='revoked');
       $('#tbl').innerHTML='<p class="hint">'+rows.length+'টি</p>'+licTable(rows);
@@ -337,29 +381,43 @@ async function vLicenses(){
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
 
-/* ---------- detail ---------- */
-async function vDetail(id){
+/* ---------- customer dashboard ---------- */
+async function vCustomer(id){
+  const v=$('#view'); v.innerHTML='<div class="boot">আসছে…</div>';
   const rows=visibleLicenses(await DB.loadLicenses());
-  const l=rows.find(x=>x.license_id===id); if(!l) return;
-  const d=daysLeft(l.expires_at);
-  const m=document.createElement('div'); m.className='modal-bg';
-  m.innerHTML='<div class="modal"><h3>'+esc(l.customer_name)+'</h3>'+
+  const l=rows.find(x=>x.license_id===id);
+  if(!l){ v.innerHTML='<div class="err">লাইসেন্স পাওয়া যায়নি।</div>'; return; }
+  const c=custOf(l), vi=validityInfo(l), d=daysLeft(l.expires_at);
+  const prof=[['মোবাইল',c.mobile],['ইমেইল',c.email],['ঠিকানা',c.address],['মাদরাসার ঠিকানা',c.madrasa_address]]
+    .filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('');
+  v.innerHTML=
+  '<div class="page-head"><h2><button class="btn btn-ghost btn-sm" id="bk">‹ পেছনে</button> গ্রাহক ড্যাশবোর্ড</h2>'+
+  (canEditL(l)?'<button class="btn btn-ghost btn-sm" id="ed">তথ্য বদলাও</button>':'')+'</div>'+
+  '<div class="card p-card"><div class="p-top">'+photoHTML(c)+
+  '<div class="p-id"><h3>'+esc(l.customer_name)+'</h3>'+
+  (c.madrasa?'<p class="p-mad">🕌 '+esc(c.madrasa)+'</p>':'')+
+  '<div>'+badge(l)+'</div></div></div>'+
+  (prof?'<dl class="kv">'+prof+'</dl>':'<p class="hint">বাড়তি তথ্য দেওয়া হয়নি। “তথ্য বদলাও” চেপে যোগ করো।</p>')+'</div>'+
+  '<div class="card"><h3>মেয়াদের হিসাব</h3><div class="vstats">'+
+  '<div class="vstat v1"><div class="n">'+esc(vi.totalTxt)+'</div><div class="l">মোট মেয়াদ (দিন)</div></div>'+
+  '<div class="vstat v2"><div class="n">'+esc(String(vi.elapsed))+'</div><div class="l">পার হয়েছে (দিন)</div></div>'+
+  '<div class="vstat v3"><div class="n">'+esc(vi.leftTxt)+'</div><div class="l">বাকি আছে (দিন)</div></div></div>'+
+  (vi.life?'':'<div class="pbar"><div class="pfill" style="width:'+vi.pct+'%"></div></div><p class="hint">'+vi.pct+'% সময় পার হয়েছে</p>')+'</div>'+
+  '<div class="card"><h3>লাইসেন্স</h3>'+
   '<dl class="kv"><dt>লাইসেন্স ID</dt><dd class="mono">'+esc(l.license_id)+'</dd>'+
   '<dt>ডিভাইস</dt><dd class="mono">'+esc(l.device_code)+'</dd>'+
   '<dt>মেয়াদ</dt><dd>'+esc(validity(l))+(l.expires_at?' — '+esc(fmtDate(l.expires_at))+' পর্যন্ত':'')+(d!==null&&l.status!=='revoked'?' ('+d+' দিন বাকি)':'')+'</dd>'+
-  '<dt>অবস্থা</dt><dd>'+badge(l)+'</dd>'+
   (isMain()?'<dt>বানিয়েছে</dt><dd>'+esc(l.issued_by||'—')+' • '+esc(fmtDT(l.issued_at))+'</dd>':'<dt>তারিখ</dt><dd>'+esc(fmtDT(l.issued_at))+'</dd>')+
   (l.status==='revoked'?'<dt>বাতিল</dt><dd>'+esc(fmtDT(l.revoked_at))+'</dd>':'')+'</dl>'+
   '<label class="f">লাইসেন্স কী</label><div class="keybox">'+esc(l.key||'—')+'</div>'+
   '<div class="row-btns">'+(l.key?'<button class="btn btn-ghost btn-sm" id="cp">কপি</button>':'')+
   (isMain()&&l.status!=='revoked'?'<button class="btn btn-danger btn-sm" id="rv">বাতিল করো</button>':'')+
   (isMain()&&l.status==='revoked'?'<button class="btn btn-primary btn-sm" id="ac">সচল করো</button>':'')+
-  (isMain()?'<button class="btn btn-ghost btn-sm" id="dl">ডিলিট</button>':'')+
-  '<button class="btn btn-ghost btn-sm" id="x">বন্ধ</button></div><div id="mm"></div></div>';
-  document.body.appendChild(m);
-  $('#x',m).onclick=()=>m.remove(); m.onclick=e=>{ if(e.target===m) m.remove(); };
-  const cp=$('#cp',m); if(cp) cp.onclick=()=>{ navigator.clipboard.writeText(l.key); cp.textContent='কপি হয়েছে ✓'; };
-  const rv=$('#rv',m);
+  (isMain()?'<button class="btn btn-ghost btn-sm" id="dl">ডিলিট</button>':'')+'</div><div id="mm"></div></div>';
+  $('#bk').onclick=()=>vShell('licenses');
+  const ed=$('#ed'); if(ed) ed.onclick=()=>vEditCustomer(id);
+  const cp=$('#cp'); if(cp) cp.onclick=()=>{ navigator.clipboard.writeText(l.key); cp.textContent='কপি হয়েছে ✓'; };
+  const rv=$('#rv');
   if(rv) rv.onclick=async()=>{
     if(!confirm('“'+l.customer_name+'”-এর লাইসেন্স বাতিল করবে?')) return;
     rv.disabled=true; rv.textContent='হচ্ছে…';
@@ -368,10 +426,11 @@ async function vDetail(id){
       const t=all.find(x=>x.license_id===id);
       t.status='revoked'; t.revoked_at=nowSec(); t.revoked_by=SESS.user.username;
       await DB.saveLicenses(all); await DB.publishRevocations();
-      $('#mm',m).innerHTML='<div class="ok">বাতিল হয়েছে। গ্রাহকের পিসি অনলাইনে এলে বন্ধ হয়ে যাবে।</div>'; rv.remove();
-    }catch(e){ $('#mm',m).innerHTML='<div class="err">'+esc(e.message)+'</div>'; rv.disabled=false; rv.textContent='বাতিল করো'; }
+      $('#mm').innerHTML='<div class="ok">বাতিল হয়েছে। গ্রাহকের পিসি অনলাইনে এলে বন্ধ হয়ে যাবে।</div>';
+      vCustomer(id);
+    }catch(e){ $('#mm').innerHTML='<div class="err">'+esc(e.message)+'</div>'; rv.disabled=false; rv.textContent='বাতিল করো'; }
   };
-  const ac=$('#ac',m);
+  const ac=$('#ac');
   if(ac) ac.onclick=async()=>{
     if(!confirm('"'+l.customer_name+'"-এর লাইসেন্স আবার সচল করবে?')) return;
     ac.disabled=true; ac.textContent='হচ্ছে…';
@@ -380,10 +439,11 @@ async function vDetail(id){
       const t=all.find(x=>x.license_id===id);
       t.status='active'; delete t.revoked_at; delete t.revoked_by;
       await DB.saveLicenses(all); await DB.publishRevocations();
-      $('#mm',m).innerHTML='<div class="ok">লাইসেন্স সচল হয়েছে। গ্রাহকের পিসি অনলাইনে এলে খুলে যাবে।</div>'; ac.remove();
-    }catch(e){ $('#mm',m).innerHTML='<div class="err">'+esc(e.message)+'</div>'; ac.disabled=false; ac.textContent='সচল করো'; }
+      $('#mm').innerHTML='<div class="ok">লাইসেন্স সচল হয়েছে। গ্রাহকের পিসি অনলাইনে এলে খুলে যাবে।</div>';
+      vCustomer(id);
+    }catch(e){ $('#mm').innerHTML='<div class="err">'+esc(e.message)+'</div>'; ac.disabled=false; ac.textContent='সচল করো'; }
   };
-  const dl=$('#dl',m);
+  const dl=$('#dl');
   if(dl) dl.onclick=async()=>{
     const msg=l.status==='revoked'
       ? '"'+l.customer_name+'"-এর বাতিল লাইসেন্স সম্পূর্ণ ডিলিট করবে? (তার সফটওয়্যার বন্ধই থাকবে)'
@@ -399,8 +459,54 @@ async function vDetail(id){
         if(!g.includes(id)){ g.push(id); await DB.saveGrave(g); }
       }
       await DB.publishRevocations();
-      m.remove(); vShell('licenses');
-    }catch(e){ $('#mm',m).innerHTML='<div class="err">'+esc(e.message)+'</div>'; dl.disabled=false; dl.textContent='ডিলিট'; }
+      vShell('licenses');
+    }catch(e){ $('#mm').innerHTML='<div class="err">'+esc(e.message)+'</div>'; dl.disabled=false; dl.textContent='ডিলিট'; }
+  };
+}
+
+/* ---------- customer info edit ---------- */
+async function vEditCustomer(id){
+  const rows=visibleLicenses(await DB.loadLicenses());
+  const l=rows.find(x=>x.license_id===id);
+  if(!l||!canEditL(l)){ vShell('licenses'); return; }
+  const c=custOf(l);
+  const v=$('#view');
+  v.innerHTML='<div class="page-head"><h2><button class="btn btn-ghost btn-sm" id="bk">‹ পেছনে</button> তথ্য বদলাও</h2></div>'+
+  '<div class="card" style="max-width:620px"><div id="ferr" class="err" style="display:none"></div>'+
+  '<div class="p-top">'+photoHTML(c)+'<div><label class="f" style="margin-top:0">ছবি</label>'+
+  '<input type="file" id="ph" accept="image/*"><p class="hint">নতুন ছবি দিলে আগেরটা বদলে যাবে।</p>'+
+  '<button class="btn btn-ghost btn-sm" id="rmph"'+(c.photo?'':' style="display:none"')+'>ছবি মুছো</button></div></div>'+
+  '<label class="f">নাম</label><input type="text" id="nm" value="'+esc(c.name||l.customer_name||'')+'">'+
+  '<label class="f">মোবাইল নম্বর</label><input type="text" id="mb" value="'+esc(c.mobile||'')+'">'+
+  '<label class="f">ইমেইল</label><input type="text" id="em" value="'+esc(c.email||'')+'">'+
+  '<label class="f">ঠিকানা</label><textarea id="ad">'+esc(c.address||'')+'</textarea>'+
+  '<label class="f">মাদরাসার নাম</label><input type="text" id="mn" value="'+esc(c.madrasa||'')+'">'+
+  '<label class="f">মাদরাসার ঠিকানা</label><textarea id="ma">'+esc(c.madrasa_address||'')+'</textarea>'+
+  '<div class="row-btns"><button class="btn btn-primary" id="sv">সংরক্ষণ করো</button></div></div>';
+  $('#bk').onclick=()=>vCustomer(id);
+  let photo=c.photo||'', photoRemoved=false;
+  $('#ph').onchange=async e=>{
+    hideErr();
+    try{ photo=await readPhoto(e.target.files[0]); photoRemoved=false;
+      const p=$('.p-top .p-photo, .p-top img',v); if(p) p.outerHTML=photoHTML({photo:photo});
+      $('#rmph').style.display='';
+    }catch(err){ showErr(err.message); e.target.value=''; }
+  };
+  $('#rmph').onclick=()=>{ photo=''; photoRemoved=true; const p=$('.p-top .p-photo, .p-top img',v); if(p) p.outerHTML=photoHTML({}); $('#rmph').style.display='none'; $('#ph').value=''; };
+  $('#sv').onclick=async ev=>{
+    hideErr(); const b=ev.target; busy(b,true);
+    try{
+      const nm=$('#nm').value.trim();
+      if(!nm) throw new Error('নাম লেখো।');
+      const all=await DB.loadLicenses();
+      const t=all.find(x=>x.license_id===id);
+      t.customer_name=nm;
+      t.customer={name:nm, mobile:$('#mb').value.trim(), email:$('#em').value.trim(),
+        address:$('#ad').value.trim(), madrasa:$('#mn').value.trim(), madrasa_address:$('#ma').value.trim(), photo:photo};
+      await DB.saveLicenses(all);
+      vCustomer(id);
+    }catch(e){ showErr(e.message); }
+    busy(b,false);
   };
 }
 
@@ -409,8 +515,17 @@ function vNew(){
   const v=$('#view');
   v.innerHTML='<div class="page-head"><h2>নতুন লাইসেন্স</h2></div>'+
   '<div class="card" style="max-width:620px"><div id="ferr" class="err" style="display:none"></div><div id="fok"></div>'+
-  '<label class="f">গ্রাহকের নাম</label><input type="text" id="c" placeholder="মাদরাসার নাম">'+
-  '<label class="f">ডিভাইস কোড</label><input type="text" id="d" class="mono" placeholder="MM-PC-…" autocomplete="off">'+
+  '<h3>গ্রাহকের তথ্য</h3>'+
+  '<div class="p-top">'+photoHTML({})+'<div style="flex:1"><label class="f" style="margin-top:0">ছবি (ইচ্ছা)</label>'+
+  '<input type="file" id="ph" accept="image/*"></div></div>'+
+  '<label class="f">গ্রাহকের নাম *</label><input type="text" id="c" placeholder="যেমন: মুহতামিম সাহেবের নাম">'+
+  '<label class="f">মোবাইল নম্বর</label><input type="text" id="m" placeholder="01XXXXXXXXX">'+
+  '<label class="f">ইমেইল</label><input type="text" id="e" placeholder="ইমেইল (ইচ্ছা)">'+
+  '<label class="f">ঠিকানা</label><textarea id="a" placeholder="গ্রাম/এলাকা, থানা, জেলা"></textarea>'+
+  '<label class="f">মাদরাসার নাম</label><input type="text" id="mn" placeholder="মাদরাসার নাম">'+
+  '<label class="f">মাদরাসার ঠিকানা</label><textarea id="ma" placeholder="মাদরাসার ঠিকানা"></textarea>'+
+  '<h3 style="margin-top:18px">লাইসেন্সের তথ্য</h3>'+
+  '<label class="f">ডিভাইস কোড *</label><input type="text" id="d" class="mono" placeholder="MM-PC-…" autocomplete="off">'+
   '<p class="hint">গ্রাহকের সফটওয়্যারে যে কোড দেখায়, সেটা হুবহু বসাও।</p>'+
   '<label class="f">মেয়াদ</label><div class="dur-pick" id="dur">'+
   [['lifetime','আজীবন'],['30','৩০ দিন'],['365','১ বছর'],['custom','অন্য…']].map((x,i)=>'<label class="'+(i===0?'sel':'')+'"><input type="radio" name="dur" value="'+x[0]+'">'+x[1]+'</label>').join('')+
@@ -420,6 +535,13 @@ function vNew(){
     $$('#dur label').forEach(x=>x.classList.remove('sel')); lb.classList.add('sel');
     $('#cd').style.display=$('input',lb).value==='custom'?'block':'none';
   });
+  let newPhoto='';
+  $('#ph').onchange=async e=>{
+    hideErr();
+    try{ newPhoto=await readPhoto(e.target.files[0]);
+      const p=$('.p-top .p-photo',v); if(p) p.outerHTML=photoHTML({photo:newPhoto});
+    }catch(err){ showErr(err.message); e.target.value=''; }
+  };
   $('#mk').onclick=async ev=>{
     hideErr(); $('#fok').innerHTML=''; $('#res').innerHTML='';
     const b=ev.target; busy(b,true,'বানাচ্ছি…');
@@ -429,7 +551,9 @@ function vNew(){
       const lic=buildLicense({customer:$('#c').value,deviceCode:$('#d').value,days:days,seedB64:SESS.secrets.seed});
       const all=await DB.loadLicenses();
       all.push({license_id:lic.license_id,customer_name:lic.customer_name,device_code:lic.device_code,
-        days:lic.days,issued_at:lic.issued_at,expires_at:lic.expires_at,issued_by:SESS.user.username,status:'active',key:lic.key});
+        days:lic.days,issued_at:lic.issued_at,expires_at:lic.expires_at,issued_by:SESS.user.username,status:'active',key:lic.key,
+        customer:{name:lic.customer_name,mobile:$('#m').value.trim(),email:$('#e').value.trim(),address:$('#a').value.trim(),
+          madrasa:$('#mn').value.trim(),madrasa_address:$('#ma').value.trim(),photo:newPhoto}});
       await DB.saveLicenses(all);
       $('#fok').innerHTML='<div class="ok">লাইসেন্স তৈরি হয়েছে ✓</div>';
       $('#res').innerHTML='<div class="card"><h3>'+esc(lic.customer_name)+'</h3><div class="keybox">'+esc(lic.key)+'</div>'+
@@ -437,7 +561,7 @@ function vNew(){
       '<p class="hint">মেয়াদ: '+esc(validity(lic))+'</p></div>';
       $('#cp2').onclick=e=>{ navigator.clipboard.writeText(lic.key); e.target.textContent='কপি হয়েছে ✓'; };
       $('#ag').onclick=()=>vShell('new');
-      $('#c').value=''; $('#d').value='';
+      $('#c').value=''; $('#d').value=''; $('#m').value=''; $('#e').value=''; $('#a').value=''; $('#mn').value=''; $('#ma').value=''; newPhoto='';
     }catch(e){ showErr(e.message); }
     busy(b,false);
   };
