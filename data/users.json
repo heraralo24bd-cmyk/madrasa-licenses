@@ -37,6 +37,15 @@
     "secrets_enc": {
       "iv": "2c9a4b0716d95b46e5c1feb7",
       "ct": "bIqNegjleBn24PgOk39305jryEHe369RPC_eqRs_aSPLlTDerqn4YxX4BJ1m76XWr2xdq-eTCOKcFX-T2rNtDb2dogMElfRgYbScUgMzVDsIzOtQO6tXJMjuF-5Zx4zMfIejr_ubED4fSedRY3cICZiJvnRk28o"
-    }
+    },
+    "packages": [
+      {
+        "id": "pkg_8aedd3c8",
+        "qty": 100000,
+        "given_at": 1792306373,
+        "given_by": "ruhul",
+        "status": "active"
+      }
+    ]
   }
 ]
