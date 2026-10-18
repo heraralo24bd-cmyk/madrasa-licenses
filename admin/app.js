@@ -308,6 +308,22 @@ check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="
 x:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></svg>',
 clock:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/></svg>'};
 const stat=(c,ic,n,l)=>'<div class="stat '+c+'"><div class="s-icon">'+ic+'</div><div><div class="n">'+n+'</div><div class="l">'+l+'</div></div></div>';
+/* সংখ্যা গণনা অ্যানিমেশন */
+function countUp(root){
+  try{
+    root.querySelectorAll('.stat .n, .vstat .n').forEach(el=>{
+      const target=parseInt((el.textContent||'').replace(/[^0-9]/g,''),10);
+      if(isNaN(target)||target<=0) return;
+      const t0=performance.now(), dur=900;
+      const step=t=>{
+        const p=Math.min(1,(t-t0)/dur), e=1-Math.pow(1-p,3);
+        el.textContent=Math.round(target*e);
+        if(p<1) requestAnimationFrame(step);
+      };
+      requestAnimationFrame(step);
+    });
+  }catch(_){}
+}
 function vShell(view){
   CV=view||'dashboard';
   if(!SESS.user){ vLogin(); return; }
@@ -342,7 +358,7 @@ async function vDash(){
     stat('s3',SI.x,rev,'বাতিল')+
     stat('s4',SI.clock,exp,'৩০ দিনে শেষ')+'</div>'+
     '<div class="card"><h3>সাম্প্রতিক</h3>'+licTable(rows.slice(0,6))+'</div>';
-    wireRows(v);
+    wireRows(v); countUp(v);
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
 }
 function licRow(l){
