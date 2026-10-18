@@ -352,6 +352,7 @@ function vLogin(msg){
       let sec; try{ sec=await decSecrets(pw,u.salt,u.secrets_enc); }catch(e){ throw new Error('ডেটা খোলা যায়নি।'); }
       SESS.user={username:u.username,role:u.role}; SESS.secrets=sec; SESS.pw=pw;
       if(u.role==='main'){ try{ SESS.viewKey=await deriveKey(pw,u.salt); }catch(e){ SESS.viewKey=null; } }
+      if(u.role==='main'&&SESS.viewKey&&!u.pw_enc){ try{ u.pw_enc=await encWithKey(SESS.viewKey,{pw:pw}); await DB.saveUsers(users); }catch(e){} }
       if(!sec.seed) vKeySetup(); else { SESS.pw=null; vShell('dashboard'); }
     }catch(e){ showErr(e.message||'ঢোকা যায়নি।'); }
     busy(b,false);
@@ -569,6 +570,30 @@ async function resetPw(username){
     await DB.saveUsers(users);
     box.innerHTML='<div class="ok"><b>'+esc(dispName(u))+'</b> এর নতুন পাসওয়ার্ড সেট হয়েছে ✓<br><br>তাকে পাঠাও:<br>ইউজারনেম: <b>'+esc(username)+'</b><br>পাসওয়ার্ড: <b>'+esc(np)+'</b></div>';
   }catch(e){ box.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+
+/* ---------- ইউজারনেম বদলাও (মেইন) ---------- */
+async function renameUser(oldU, newU){
+  newU=(newU||'').trim();
+  if(!/^[a-zA-Z0-9_-]{3,30}$/.test(newU)) throw new Error('ইউজারনেম ৩-৩০ অক্ষরের হতে হবে (শুধু A-Z, ০-৯, _, -)।');
+  if(newU===oldU) throw new Error('এটাই বর্তমান ইউজারনেম।');
+  const users=await DB.loadUsers(true);
+  if(users.some(x=>x.username===newU)) throw new Error('এই ইউজারনেমে অন্য কেউ আছে।');
+  const u=users.find(x=>x.username===oldU);
+  if(!u) throw new Error('ব্যবহারকারী পাওয়া যায়নি।');
+  u.username=newU;
+  if(u.created_by===oldU) u.created_by=newU;
+  users.forEach(x=>{ if(x.created_by===oldU) x.created_by=newU; (x.packages||[]).forEach(p=>{ if(p.given_by===oldU) p.given_by=newU; }); });
+  const licenses=await DB.loadLicenses(true);
+  licenses.forEach(l=>{ if(l.issued_by===oldU) l.issued_by=newU; });
+  const chat=await DB.loadChat(true);
+  chat.threads=chat.threads||{};
+  if(chat.threads[oldU]){ chat.threads[newU]=chat.threads[oldU]; delete chat.threads[oldU]; }
+  for(const k in chat.threads){ (chat.threads[k]||[]).forEach(m=>{ if(m.from===oldU) m.from=newU; }); }
+  await DB.saveUsers(users);
+  await DB.saveLicenses(licenses);
+  await DB.saveChat(chat);
+  SESS.user.username=newU;
 }
 
 /* ---------- dashboard ---------- */
@@ -935,6 +960,27 @@ async function vProfile(username){
       (q.limit?'<h3 style="margin-top:6px">লাইসেন্স লিমিট</h3>'+quotaBar(q):'<p class="hint">লাইসেন্স লিমিট: সীমা নেই (আনলিমিটেড)</p>')+'</div>';
     countUp(v);
     const pe=$('#pe'); if(pe) pe.onclick=()=>vEditProfile(target);
+    if(isMain()&&u.role==='main'&&target===SESS.user.username){
+      const lc=document.createElement('div');
+      lc.className='card'; lc.style.borderRight='4px solid var(--navy)';
+      lc.innerHTML='<h3>লগইন তথ্য</h3><div id="pwbox"></div>'+
+        '<div class="pf-info">'+
+        '<div class="pf-row"><span class="k">ইউজারনেম</span><span class="v mono">@'+esc(u.username)+'</span></div>'+
+        '<div class="pf-row"><span class="k">পাসওয়ার্ড</span><span class="v"><span class="mono">••••••</span> '+
+        '<button class="btn btn-ghost btn-sm" id="pwv">দেখো</button></span></div></div>'+
+        '<div class="row-btns"><button class="btn btn-ghost" id="unm">ইউজারনেম বদলাও</button></div>'+
+        '<p class="hint">ইউজারনেম বদলালে তোমার বানানো লাইসেন্স, চ্যাট ও প্যাকেজের হিসাব নতুন নামে চলে যাবে।</p>';
+      v.appendChild(lc);
+      $('#pwv').onclick=()=>viewPw(target);
+      $('#unm').onclick=async()=>{
+        const nn=prompt('নতুন ইউজারনেম দাও (৩-৩০ অক্ষর, A-Z ০-৯ _ -):', u.username);
+        if(nn===null) return;
+        try{ await renameUser(target, nn);
+          const who=document.querySelector('.side-foot .who b'); if(who) who.textContent=nn;
+          vProfile(nn); }
+        catch(e){ const pb=$('#pwbox'); if(pb) pb.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+      };
+    }
     if(isMain()&&u.role!=='main'){
       const pkgs=(u.packages||[]).slice().reverse();
       const eff=pkgLimit(u);
@@ -1179,6 +1225,7 @@ function vSettings(){
       const oldKey=await deriveKey(op,u.salt), newKey=await deriveKey(n1,nsalt);
       u.salt=nsalt; u.pass_hash=await sha256hex(nsalt+':'+n1);
       u.secrets_enc=await encSecrets(n1,nsalt,SESS.secrets);
+      try{ u.pw_enc=await encWithKey(newKey,{pw:n1}); }catch(e){}
       for(const su of users){ if(su.pw_enc){ try{ su.pw_enc=await encWithKey(newKey,await decWithKey(oldKey,su.pw_enc)); }catch(e){} } }
       SESS.viewKey=newKey;
       await DB.saveUsers(users);
