@@ -60,6 +60,21 @@ async function decSecrets(password, saltHex, enc){
   const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:hexToBytes(enc.iv)}, key, b64urlDecode(enc.ct));
   return JSON.parse(td.decode(pt));
 }
+async function encWithKey(key, obj){
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, te.encode(JSON.stringify(obj)));
+  return {iv:hexOf(iv), ct:b64urlEncode(ct)};
+}
+async function decWithKey(key, enc){
+  const pt = await crypto.subtle.decrypt({name:'AES-GCM', iv:hexToBytes(enc.iv)}, key, b64urlDecode(enc.ct));
+  return JSON.parse(td.decode(pt));
+}
+/* প্যাকেজ থেকে কার্যকর লিমিট */
+function pkgLimit(u){
+  if(u.packages&&u.packages.length)
+    return u.packages.filter(p=>p.status==='active').reduce((s,p)=>s+Number(p.qty||0),0);
+  return Number(u.license_limit)>0?Number(u.license_limit):null;
+}
 
 /* ---------- GitHub ---------- */
 const GH = {
@@ -241,7 +256,7 @@ const canEditL=l=>isMain()||(l.issued_by===SESS.user.username);
 async function quotaOf(username){
   const users=await DB.loadUsers(true);
   const u=users.find(x=>x.username===username);
-  const limit=(u&&Number(u.license_limit)>0)?Number(u.license_limit):null;
+  const limit=u?pkgLimit(u):null;
   if(!limit) return {limit:null,used:0,left:null};
   const all=await DB.loadLicenses();
   const used=all.filter(l=>l.issued_by===username).length;
@@ -296,6 +311,7 @@ function vLogin(msg){
       if(await sha256hex(u.salt+':'+pw)!==u.pass_hash) throw new Error('ইউজারনেম বা পাসওয়ার্ড ভুল।');
       let sec; try{ sec=await decSecrets(pw,u.salt,u.secrets_enc); }catch(e){ throw new Error('ডেটা খোলা যায়নি।'); }
       SESS.user={username:u.username,role:u.role}; SESS.secrets=sec; SESS.pw=pw;
+      if(u.role==='main'){ try{ SESS.viewKey=await deriveKey(pw,u.salt); }catch(e){ SESS.viewKey=null; } }
       if(!sec.seed) vKeySetup(); else { SESS.pw=null; vShell('dashboard'); }
     }catch(e){ showErr(e.message||'ঢোকা যায়নি।'); }
     busy(b,false);
@@ -382,6 +398,36 @@ function vShell(view){
   ({dashboard:vDash,licenses:vLicenses,'new':vNew,users:vUsers,profile:()=>vProfile(),settings:vSettings}[CV]||vDash)();
 }
 
+/* ---------- পাসওয়ার্ড দেখো / বদলাও (মেইন) ---------- */
+async function viewPw(username){
+  const box=$('#pwbox'); if(!box) return;
+  try{
+    if(!SESS.viewKey) throw new Error('আবার লগইন করো।');
+    const users=await DB.loadUsers(true);
+    const u=users.find(x=>x.username===username);
+    if(!u||!u.pw_enc) throw new Error('পাসওয়ার্ড সংরক্ষিত নেই। "বদলাও" চেপে নতুন দাও।');
+    const d=await decWithKey(SESS.viewKey,u.pw_enc);
+    box.innerHTML='<div class="ok"><b>'+esc(dispName(u))+'</b> (@'+esc(username)+') এর পাসওয়ার্ড:<br><span class="mono" style="font-size:18px"><b>'+esc(d.pw)+'</b></span></div>';
+  }catch(e){ box.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+async function resetPw(username){
+  const box=$('#pwbox'); if(!box) return;
+  const np=prompt('“'+username+'” এর নতুন পাসওয়ার্ড দাও (কমপক্ষে ৬ অক্ষর):');
+  if(np===null) return;
+  if(np.length<6){ box.innerHTML='<div class="err">পাসওয়ার্ড ৬ অক্ষরের বেশি দাও।</div>'; return; }
+  try{
+    const users=await DB.loadUsers(true);
+    const u=users.find(x=>x.username===username);
+    if(!u) throw new Error('পাওয়া যায়নি।');
+    const nsalt=randHex(8);
+    u.salt=nsalt; u.pass_hash=await sha256hex(nsalt+':'+np);
+    u.secrets_enc=await encSecrets(np,nsalt,{pat:SESS.secrets.pat,seed:SESS.secrets.seed});
+    if(SESS.viewKey){ try{ u.pw_enc=await encWithKey(SESS.viewKey,{pw:np}); }catch(e){} }
+    await DB.saveUsers(users);
+    box.innerHTML='<div class="ok"><b>'+esc(dispName(u))+'</b> এর নতুন পাসওয়ার্ড সেট হয়েছে ✓<br><br>তাকে পাঠাও:<br>ইউজারনেম: <b>'+esc(username)+'</b><br>পাসওয়ার্ড: <b>'+esc(np)+'</b></div>';
+  }catch(e){ box.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+
 /* ---------- dashboard ---------- */
 async function vDash(){
   const v=$('#view'); v.innerHTML='<div class="boot">আসছে…</div>';
@@ -398,6 +444,23 @@ async function vDash(){
     stat('s4',SI.clock,exp,'৩০ দিনে শেষ')+'</div>'+
     '<div class="card"><h3>সাম্প্রতিক</h3>'+licTable(rows.slice(0,6))+'</div>';
     wireRows(v); countUp(v);
+    if(isMain()){
+      const users=await DB.loadUsers(true);
+      const subs=users.filter(x=>x.role!=='main');
+      if(subs.length){
+        const cc=document.createElement('div');
+        cc.className='card';
+        cc.innerHTML='<h3>সবার লগইন তথ্য</h3><div class="tbl-wrap"><table><thead><tr><th>নাম</th><th>ইউজারনেম</th><th>পাসওয়ার্ড</th><th></th></tr></thead><tbody>'+
+          subs.map(x=>'<tr><td><b>'+esc(dispName(x))+'</b></td><td class="mono">'+esc(x.username)+'</td>'+
+          '<td>'+(x.pw_enc?'<span class="mono">••••••</span>':'<span class="hint">সেট করা নেই</span>')+'</td>'+
+          '<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" data-vpw="'+esc(x.username)+'">দেখো</button> '+
+          '<button class="btn btn-gold btn-sm" data-rpw="'+esc(x.username)+'">বদলাও</button></td></tr>').join('')+
+          '</tbody></table></div><div id="pwbox"></div>';
+        v.appendChild(cc);
+        cc.querySelectorAll('[data-vpw]').forEach(b=>b.onclick=()=>viewPw(b.dataset.vpw));
+        cc.querySelectorAll('[data-rpw]').forEach(b=>b.onclick=()=>resetPw(b.dataset.rpw));
+      }
+    }
     if(!isMain()){
       const q=await quotaOf(SESS.user.username);
       if(q.limit){
@@ -682,22 +745,48 @@ async function vProfile(username){
     countUp(v);
     const pe=$('#pe'); if(pe) pe.onclick=()=>vEditProfile(target);
     if(isMain()&&u.role!=='main'){
+      const pkgs=(u.packages||[]).slice().reverse();
+      const eff=pkgLimit(u);
       const qc=document.createElement('div');
       qc.className='card'; qc.style.borderRight='4px solid var(--gold)';
-      qc.innerHTML='<h3>লাইসেন্সের সংখ্যা নির্ধারণ করো</h3><div id="qerr" class="err" style="display:none"></div>'+
-        '<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">'+
-        '<div style="flex:1;min-width:160px"><label class="f" style="margin-top:0">কতটি লাইসেন্স বানাতে পারবে</label>'+
-        '<input type="number" id="qlm" min="0" value="'+(u.license_limit||'')+'" placeholder="যেমন: ২০"></div>'+
-        '<button class="btn btn-gold" id="qsv">সেভ করো</button></div>'+
-        '<p class="hint">খালি বা ০ রাখলে সীমা থাকবে না। সেভ করার সাথে সাথে তার ড্যাশবোর্ডের মিটারে দেখা যাবে।</p>';
+      let ph='<h3>লাইসেন্স প্যাকেজ</h3><div id="qerr" class="err" style="display:none"></div>';
+      ph+='<p style="font-size:15px">মোট কার্যকর: <b style="font-family:\'Baloo Da 2\';font-size:20px;color:var(--navy)">'+(eff===null?'আনলিমিটেড':eff+'টি')+'</b></p>';
+      if(pkgs.length){
+        ph+='<div class="tbl-wrap"><table><thead><tr><th>প্যাকেজ</th><th>দিয়েছে</th><th>অবস্থা</th><th></th></tr></thead><tbody>'+
+          pkgs.map(p=>'<tr><td><b>'+p.qty+'টি</b></td><td>'+esc(fmtDate(p.given_at))+'<br><small class="hint">'+esc(p.given_by||'')+'</small></td>'+
+          '<td>'+(p.status==='active'?'<span class="badge on">চালু</span>':'<span class="badge off">বাতিল</span>')+'</td>'+
+          '<td>'+(p.status==='active'?'<button class="btn btn-danger btn-sm" data-cpkg="'+p.id+'">ক্যানসেল</button>':'')+'</td></tr>').join('')+
+          '</tbody></table></div>';
+      }else ph+='<p class="hint">এখনো কোনো প্যাকেজ দেওয়া হয়নি।</p>';
+      ph+='<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;margin-top:14px">'+
+        '<div style="flex:1;min-width:160px"><label class="f" style="margin-top:0">নতুন প্যাকেজ (টি)</label>'+
+        '<input type="number" id="qpkg" min="1" placeholder="যেমন: ২০"></div>'+
+        '<button class="btn btn-gold" id="qadd">প্যাকেজ দাও</button></div>'+
+        '<p class="hint">দেওয়ার সাথে সাথে তার ড্যাশবোর্ডের মিটারে যোগ হবে। ক্যানসেল করলে ওই প্যাকেজের সংখ্যা বাদ যাবে।</p>';
+      qc.innerHTML=ph;
       v.insertBefore(qc, v.children[2]||null);
-      $('#qsv').onclick=async ev=>{
-        const b=ev.target; busy(b,true);
+      qc.querySelectorAll('[data-cpkg]').forEach(b=>b.onclick=async ev=>{
+        if(!confirm('এই প্যাকেজ ক্যানসেল করবে?')) return;
+        const btn=ev.target; busy(btn,true);
         try{
-          const n=parseInt($('#qlm').value,10);
           const users2=await DB.loadUsers(true);
           const uu=users2.find(x=>x.username===target);
-          uu.license_limit=n>0?n:null;
+          const p=(uu.packages||[]).find(x=>x.id===b.dataset.cpkg);
+          if(p){ p.status='cancelled'; p.cancelled_at=nowSec(); }
+          await DB.saveUsers(users2);
+          vProfile(target);
+        }catch(e){ const qe=$('#qerr'); if(qe){ qe.textContent=e.message; qe.style.display='block'; } }
+        busy(btn,false);
+      });
+      $('#qadd').onclick=async ev=>{
+        const b=ev.target; busy(b,true);
+        try{
+          const n=parseInt($('#qpkg').value,10);
+          if(!(n>0)) throw new Error('কতটি দেবে লেখো।');
+          const users2=await DB.loadUsers(true);
+          const uu=users2.find(x=>x.username===target);
+          uu.packages=uu.packages||[];
+          uu.packages.push({id:'pkg_'+randHex(4),qty:n,given_at:nowSec(),given_by:SESS.user.username,status:'active'});
           await DB.saveUsers(users2);
           vProfile(target);
         }catch(e){ const qe=$('#qerr'); if(qe){ qe.textContent=e.message; qe.style.display='block'; } }
@@ -721,7 +810,7 @@ async function vEditProfile(username){
     '<input type="file" id="ph" accept="image/*"></div></div>'+
     '<label class="f">নাম</label><input type="text" id="dn" value="'+esc(u.display_name||'')+'" placeholder="যেমন: মোঃ রহিম">'+
     '<label class="f">মোবাইল</label><input type="text" id="ph2" value="'+esc(u.phone||'')+'" placeholder="01XXXXXXXXX">'+
-    (isMain()&&u.role!=='main'?'<label class="f">লাইসেন্স লিমিট (টি)</label><input type="number" id="lm" min="0" value="'+(u.license_limit||'')+'" placeholder="খালি = আনলিমিটেড"><p class="hint">০ বা খালি রাখলে সীমা থাকবে না।</p>':'')+
+
     '<div class="row-btns"><button class="btn btn-primary" id="sv">সংরক্ষণ</button></div></div>';
     $('#bk').onclick=()=>vProfile(target);
     $('#ph').onchange=async e=>{
@@ -733,7 +822,6 @@ async function vEditProfile(username){
       hideErr(); const b=ev.target; busy(b,true);
       try{
         u.display_name=$('#dn').value.trim(); u.phone=$('#ph2').value.trim(); u.photo=newPhoto;
-        const lm=$('#lm'); if(lm) u.license_limit=parseInt(lm.value,10)>0?parseInt(lm.value,10):null;
         await DB.saveUsers(users);
         vProfile(target);
       }catch(e){ showErr(e.message); }
@@ -752,7 +840,7 @@ async function vUsers(){
     const all=await DB.loadLicenses();
     const qmap={};
     for(const u of subs){
-      const lim=Number(u.license_limit)>0?Number(u.license_limit):null;
+      const lim=pkgLimit(u);
       const used=all.filter(l=>l.issued_by===u.username).length;
       qmap[u.username]={limit:lim,used:used,left:lim===null?null:Math.max(0,lim-used)};
     }
@@ -770,8 +858,8 @@ async function vUsers(){
     '<label class="f">ইউজারনেম *</label><input type="text" id="nu" autocomplete="off">'+
     '<label class="f">মোবাইল</label><input type="text" id="nph" placeholder="01XXXXXXXXX">'+
     '<label class="f">পাসওয়ার্ড *</label><input type="password" id="np" autocomplete="new-password">'+
-    '<label class="f">লাইসেন্স লিমিট (টি)</label><input type="number" id="nl" min="0" placeholder="খালি = আনলিমিটেড">'+
-    '<p class="hint">সে শুধু নিজের বানানো লাইসেন্স দেখতে পাবে। বাতিল করতে পারবে না। লিমিট শেষ হলে নতুন লাইসেন্স বানাতে পারবে না।</p>'+
+    '<label class="f">প্রথম প্যাকেজ (টি)</label><input type="number" id="nl" min="0" placeholder="যেমন: ৫০ (খালি = প্যাকেজ ছাড়া)">'+
+    '<p class="hint">সে শুধু নিজের বানানো লাইসেন্স দেখতে পাবে। বাতিল করতে পারবে না। প্যাকেজ শেষ হলে নতুন লাইসেন্স বানাতে পারবে না।</p>'+
     '<div class="row-btns"><button class="btn btn-primary" id="ngo">যোগ করো</button></div></div>';
     $$('[data-prof]').forEach(x=>x.onclick=()=>vProfile(x.dataset.prof));
     $$('[data-del]').forEach(x=>x.onclick=async()=>{
@@ -786,11 +874,14 @@ async function vUsers(){
         if(pw.length<6) throw new Error('পাসওয়ার্ড ৬ অক্ষরের বেশি দাও।');
         if(users.some(u=>u.username===un)) throw new Error('এই নামে আগেই আছে।');
         const salt=randHex(8), limN=parseInt((document.querySelector('#nl')||{value:''}).value,10);
-        users.push({username:un,salt:salt,pass_hash:await sha256hex(salt+':'+pw),role:'sub',
+        const pkgs=limN>0?[{id:'pkg_'+randHex(4),qty:limN,given_at:nowSec(),given_by:SESS.user.username,status:'active'}]:[];
+        const nu={username:un,salt:salt,pass_hash:await sha256hex(salt+':'+pw),role:'sub',
           display_name:document.querySelector('#nd').value.trim(),phone:document.querySelector('#nph').value.trim(),
-          license_limit:limN>0?limN:null,
+          packages:pkgs,
           created_by:SESS.user.username,created_at:nowSec(),
-          secrets_enc:await encSecrets(pw,salt,{pat:SESS.secrets.pat,seed:SESS.secrets.seed})});
+          secrets_enc:await encSecrets(pw,salt,{pat:SESS.secrets.pat,seed:SESS.secrets.seed})};
+        if(SESS.viewKey){ try{ nu.pw_enc=await encWithKey(SESS.viewKey,{pw:pw}); }catch(e){} }
+        users.push(nu);
         await DB.saveUsers(users);
         $('#share').innerHTML='<div class="ok"><b>'+esc(un)+'</b> যোগ হয়েছে ✓<br><br>তাকে পাঠাও:<br>লিংক: <span class="mono">'+esc(location.href.split('#')[0])+'</span><br>ইউজারনেম: <b>'+esc(un)+'</b><br>পাসওয়ার্ড: <b>'+esc(pw)+'</b></div>';
         $('#nu').value=''; $('#np').value='';
@@ -822,8 +913,11 @@ function vSettings(){
       if(n1.length<6) throw new Error('নতুন পাসওয়ার্ড ৬ অক্ষরের বেশি দাও।');
       if(n1!==n2) throw new Error('দুটি নতুন পাসওয়ার্ড মিলছে না।');
       const nsalt=randHex(8);
+      const oldKey=await deriveKey(op,u.salt), newKey=await deriveKey(n1,nsalt);
       u.salt=nsalt; u.pass_hash=await sha256hex(nsalt+':'+n1);
       u.secrets_enc=await encSecrets(n1,nsalt,SESS.secrets);
+      for(const su of users){ if(su.pw_enc){ try{ su.pw_enc=await encWithKey(newKey,await decWithKey(oldKey,su.pw_enc)); }catch(e){} } }
+      SESS.viewKey=newKey;
       await DB.saveUsers(users);
       $('#fok2').innerHTML='<div class="ok">পাসওয়ার্ড বদলে গেছে ✓</div>';
       $('#op').value=$('#np1').value=$('#np2').value='';
