@@ -22,7 +22,16 @@
       "iv": "7d5865155c12c055931e9928",
       "ct": "0bFiJEWhNXB9UyjA3FV11t9Ogg_MN8X5HMZT5szR7uZYXxvhV0pPiGsoy8czEjDjSiCXIHuclV06ruk7sNgaj_7bTr-HGAN4YkV8ZRse6jSxdovO7GXwvG0mTzpDQ-QYpf5UfSDIQWVd14Y4kpzhcyA2S031sNs"
     },
-    "license_limit": 100
+    "license_limit": 100,
+    "packages": [
+      {
+        "id": "pkg_706690f7",
+        "qty": 1,
+        "given_at": 1792308153,
+        "given_by": "ruhul",
+        "status": "active"
+      }
+    ]
   },
   {
     "username": "korim",
