@@ -307,3 +307,32 @@ input[type=file]:hover{border-color:var(--teal);background:var(--teal-bg)}
 .dq-num{font-family:"Baloo Da 2",sans-serif;font-size:44px;font-weight:800;fill:var(--navy)}
 .dq-lab{font-size:15px;fill:var(--muted);font-weight:600}
 @media(max-width:640px){.qgrid{grid-template-columns:repeat(2,1fr)}}
+
+/* ---------- ড্যাশবোর্ড হিরো (সাব-অ্যাডমিন) ---------- */
+.dh-hero{overflow:hidden;padding:0;animation:pop .5s var(--ease) both}
+.dh-cover{height:104px;position:relative;overflow:hidden;
+  background:linear-gradient(120deg,#081a30 0%,#1d4a73 55%,#0d5c43 130%)}
+.dh-cover::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(380px 150px at 20% -40px,rgba(201,162,39,.35),transparent 70%)}
+.dh-cover::after{content:'';position:absolute;inset:0;opacity:.12;
+  background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.5) 0 1px,transparent 1px 14px),
+                   repeating-linear-gradient(-45deg,rgba(255,255,255,.5) 0 1px,transparent 1px 14px)}
+.dh-main{display:flex;gap:18px;align-items:center;padding:0 24px 20px;position:relative;flex-wrap:wrap}
+.dh-ava{width:96px;height:96px;margin-top:-48px;position:relative;z-index:2;flex-shrink:0;cursor:pointer}
+.dh-ava img{width:96px;height:96px;border-radius:50%;object-fit:cover;border:4px solid #fff;outline:3px solid var(--gold);
+  box-shadow:0 12px 28px rgba(12,35,64,.35);transition:transform .3s var(--ease)}
+.dh-ava:hover img{transform:scale(1.05)}
+.dh-ava .p-empty{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:40px;border:4px solid #fff;outline:3px solid var(--gold);background:linear-gradient(135deg,var(--gold-bg),#f7e9bd);
+  box-shadow:0 12px 28px rgba(12,35,64,.35)}
+.dh-cam{position:absolute;right:0;bottom:2px;width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--gold-deep));
+  display:flex;align-items:center;justify-content:center;font-size:14px;border:2px solid #fff;
+  box-shadow:0 4px 12px rgba(0,0,0,.25)}
+.dh-txt{padding-top:8px;min-width:0}
+.dh-salam{margin:0;color:var(--gold-deep);font-weight:700;font-size:14px;letter-spacing:.5px}
+.dh-name{margin:2px 0 4px;font-size:26px;font-weight:800;color:var(--navy);line-height:1.2}
+.dh-card h3::before,.dh-hero h3::before{display:none}
+.dh-addr{margin:0;color:var(--muted);font-size:14px;display:flex;align-items:center;gap:7px}
+.dh-addr svg{width:16px;height:16px;color:var(--gold-deep);flex-shrink:0}
+.dh-edit{margin-left:auto;align-self:flex-start;margin-top:14px}
+@media(max-width:640px){.dh-name{font-size:22px}.dh-main{padding:0 16px 16px}.dh-edit{margin-top:8px}}

@@ -439,6 +439,32 @@ async function vDash(){
     stat('s4',SI.clock,exp,'৩০ দিনে শেষ')+'</div>'+
     '<div class="card"><h3>সাম্প্রতিক</h3>'+licTable(rows.slice(0,6))+'</div>';
     wireRows(v); countUp(v);
+    if(!isMain()){
+      const users0=await DB.loadUsers(true);
+      const me=users0.find(x=>x.username===SESS.user.username)||{};
+      const hero=document.createElement('div');
+      hero.className='card dh-hero';
+      hero.innerHTML='<div class="dh-cover"></div><div class="dh-main">'+
+        '<div class="dh-ava" id="dhAva" title="ছবি বদলাও">'+(me.photo?'<img src="'+me.photo+'" alt="">':'<div class="p-empty">👤</div>')+'<span class="dh-cam">📷</span></div>'+
+        '<div class="dh-txt"><p class="dh-salam">আসসালামু আলাইকুম</p>'+
+        '<h3 class="dh-name">'+esc(dispName(me))+'</h3>'+
+        '<p class="dh-addr"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>'+
+        esc(me.address||'ঠিকানা দেওয়া হয়নি')+'</p></div>'+
+        '<button class="btn btn-ghost btn-sm dh-edit" id="dhEdit">বদলাও</button></div>'+
+        '<input type="file" id="dhPhoto" accept="image/*" style="display:none">';
+      v.insertBefore(hero, v.children[1]||null);
+      $('#dhEdit').onclick=()=>vEditProfile();
+      $('#dhAva').onclick=()=>$('#dhPhoto').click();
+      $('#dhPhoto').onchange=async e=>{
+        try{
+          const ph=await readPhoto(e.target.files[0]);
+          const users2=await DB.loadUsers(true);
+          const uu=users2.find(x=>x.username===SESS.user.username);
+          uu.photo=ph; await DB.saveUsers(users2);
+          vDash();
+        }catch(err){ alert(err.message); }
+      };
+    }
     if(isMain()){
       const users=await DB.loadUsers(true);
       const subs=users.filter(x=>x.role!=='main');
@@ -468,7 +494,8 @@ async function vDash(){
         '<div class="qbox qb-rev"><div class="qn">'+rev+'</div><div class="ql">বাতিল</div></div>'+
         '<div class="qbox qb-total"><div class="qn">'+q.limit+'</div><div class="ql">মোট লিমিট</div></div>'+
         '</div>';
-        v.insertBefore(box, v.children[2]||null);
+        const st=v.querySelector('.stats');
+        if(st) st.parentNode.insertBefore(box, st.nextSibling); else v.appendChild(box);
       }
     }
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
@@ -810,6 +837,7 @@ async function vEditProfile(username){
     '<input type="file" id="ph" accept="image/*"></div></div>'+
     '<label class="f">নাম</label><input type="text" id="dn" value="'+esc(u.display_name||'')+'" placeholder="যেমন: মোঃ রহিম">'+
     '<label class="f">মোবাইল</label><input type="text" id="ph2" value="'+esc(u.phone||'')+'" placeholder="01XXXXXXXXX">'+
+    '<label class="f">ঠিকানা</label><textarea id="ad" placeholder="গ্রাম/এলাকা, থানা, জেলা">'+esc(u.address||'')+'</textarea>'+
 
     '<div class="row-btns"><button class="btn btn-primary" id="sv">সংরক্ষণ</button></div></div>';
     $('#bk').onclick=()=>vProfile(target);
@@ -821,7 +849,7 @@ async function vEditProfile(username){
     $('#sv').onclick=async ev=>{
       hideErr(); const b=ev.target; busy(b,true);
       try{
-        u.display_name=$('#dn').value.trim(); u.phone=$('#ph2').value.trim(); u.photo=newPhoto;
+        u.display_name=$('#dn').value.trim(); u.phone=$('#ph2').value.trim(); u.address=$('#ad').value.trim(); u.photo=newPhoto;
         await DB.saveUsers(users);
         vProfile(target);
       }catch(e){ showErr(e.message); }
