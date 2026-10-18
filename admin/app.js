@@ -237,6 +237,24 @@ function readPhoto(file){
 }
 const canEditL=l=>isMain()||(l.issued_by===SESS.user.username);
 
+/* ---------- সাব-অ্যাডমিন: লিমিট ও প্রোফাইল ---------- */
+async function quotaOf(username){
+  const users=await DB.loadUsers(true);
+  const u=users.find(x=>x.username===username);
+  const limit=(u&&Number(u.license_limit)>0)?Number(u.license_limit):null;
+  if(!limit) return {limit:null,used:0,left:null};
+  const all=await DB.loadLicenses();
+  const used=all.filter(l=>l.issued_by===username).length;
+  return {limit:limit,used:used,left:Math.max(0,limit-used)};
+}
+const dispName=u=>(u&&(u.display_name||u.username))||'';
+function quotaBar(q){
+  if(!q.limit) return '<span class="hint">সীমা নেই</span>';
+  const pct=Math.min(100,Math.round(q.used/q.limit*100));
+  return '<div style="min-width:130px"><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:4px"><b>'+q.used+'/'+q.limit+'</b><span class="'+(q.left===0?'badge off':'badge on')+'">'+(q.left===0?'শেষ':'বাকি '+q.left)+'</span></div>'+
+  '<div class="pbar" style="height:8px"><div class="pfill" style="width:'+pct+'%"></div></div></div>';
+}
+
 /* ---------- login ---------- */
 function vLogin(msg){
   app.innerHTML=
@@ -301,6 +319,7 @@ dash:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2
 list:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9h10M7 13h6"/></svg>',
 plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 8v8M8 12h8"/></svg>',
 users:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.5c2.8.4 5 2.6 5 5.5"/></svg>',
+user:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>',
 gear:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.5-2-3.4-2.3 1a7 7 0 0 0-2-1.2L14.2 3h-4l-.4 2.7a7 7 0 0 0-2 1.2l-2.3-1-2 3.4 2 1.5a7 7 0 0 0 0 2.4l-2 1.5 2 3.4 2.3-1a7 7 0 0 0 2 1.2l.4 2.7h4l.4-2.7a7 7 0 0 0 2-1.2l2.3 1 2-3.4-2-1.5c.06-.4.1-.8.1-1.2z"/></svg>'};
 const SI={
 box:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8l-9-5-9 5v8l9 5 9-5V8z"/><path d="M3 8l9 5 9-5M12 13v8"/></svg>',
@@ -329,6 +348,7 @@ function vShell(view){
   if(!SESS.user){ vLogin(); return; }
   const nav=[['dashboard','ড্যাশবোর্ড',I.dash],['licenses','লাইসেন্স',I.list],['new','নতুন লাইসেন্স',I.plus]];
   if(isMain()) nav.push(['users','সাব-অ্যাডমিন',I.users]);
+  nav.push(['profile','প্রোফাইল',I.user]);
   nav.push(['settings','সেটিংস',I.gear]);
   app.innerHTML=
   '<div class="shell"><aside class="sidebar">'+
@@ -340,7 +360,7 @@ function vShell(view){
   '<div class="footer-note">মাদরাসা ম্যানেজার • লাইসেন্স মেশিন</div></div></div>';
   $$('.snav button').forEach(b=>b.onclick=()=>vShell(b.dataset.v));
   $('#slo').onclick=()=>{ SESS.user=null; SESS.secrets=null; SESS.pw=null; vLogin('লগআউট হয়েছে।'); };
-  ({dashboard:vDash,licenses:vLicenses,'new':vNew,users:vUsers,settings:vSettings}[CV]||vDash)();
+  ({dashboard:vDash,licenses:vLicenses,'new':vNew,users:vUsers,profile:()=>vProfile(),settings:vSettings}[CV]||vDash)();
 }
 
 /* ---------- dashboard ---------- */
@@ -527,9 +547,18 @@ async function vEditCustomer(id){
 }
 
 /* ---------- new license ---------- */
-function vNew(){
+async function vNew(){
   const v=$('#view');
-  v.innerHTML='<div class="page-head"><h2>নতুন লাইসেন্স</h2></div>'+
+  let qnote='';
+  if(!isMain()){
+    const q=await quotaOf(SESS.user.username);
+    if(q.limit){
+      qnote='<div class="card" style="border-right:4px solid '+(q.left===0?'var(--red)':'var(--gold)')+'">'+
+        '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><b>তোমার লাইসেন্স লিমিট:</b>'+quotaBar(q)+'</div>'+
+        (q.left===0?'<p class="hint" style="color:var(--red);font-weight:700">লিমিট শেষ — নতুন লাইসেন্স বানাতে মেইন অ্যাডমিনের সাথে যোগাযোগ করো।</p>':'')+'</div>';
+    }
+  }
+  v.innerHTML='<div class="page-head"><h2>নতুন লাইসেন্স</h2></div>'+qnote+
   '<div class="card" style="max-width:620px"><div id="ferr" class="err" style="display:none"></div><div id="fok"></div>'+
   '<h3>গ্রাহকের তথ্য</h3>'+
   '<div class="p-top">'+photoHTML({})+'<div style="flex:1"><label class="f" style="margin-top:0">ছবি (ইচ্ছা)</label>'+
@@ -562,6 +591,10 @@ function vNew(){
     hideErr(); $('#fok').innerHTML=''; $('#res').innerHTML='';
     const b=ev.target; busy(b,true,'বানাচ্ছি…');
     try{
+      if(!isMain()){
+        const q=await quotaOf(SESS.user.username);
+        if(q.limit&&q.left<=0) throw new Error('তোমার লাইসেন্স লিমিট শেষ। মেইন অ্যাডমিনের সাথে যোগাযোগ করো।');
+      }
       const dv=$('input[name=dur]:checked').value;
       const days=dv==='lifetime'?null:(dv==='custom'?parseInt($('#nd').value,10):parseInt(dv,10));
       const lic=buildLicense({customer:$('#c').value,deviceCode:$('#d').value,days:days,seedB64:SESS.secrets.seed});
@@ -583,6 +616,76 @@ function vNew(){
   };
 }
 
+/* ---------- প্রোফাইল ---------- */
+async function vProfile(username){
+  const v=$('#view'); v.innerHTML='<div class="boot">আসছে…</div>';
+  try{
+    const target=username||SESS.user.username;
+    if(!isMain()&&target!==SESS.user.username){ v.innerHTML='<div class="err">অনুমতি নেই।</div>'; return; }
+    const users=await DB.loadUsers(true);
+    const u=users.find(x=>x.username===target);
+    if(!u){ v.innerHTML='<div class="err">ব্যবহারকারী পাওয়া যায়নি।</div>'; return; }
+    const all=await DB.loadLicenses();
+    const mine=all.filter(l=>l.issued_by===target);
+    const act=mine.filter(l=>l.status!=='revoked').length, rev=mine.length-act;
+    const q=await quotaOf(target);
+    const canEdit=isMain()||target===SESS.user.username;
+    v.innerHTML='<div class="page-head"><h2>প্রোফাইল</h2>'+
+      (canEdit?'<button class="btn btn-ghost btn-sm" id="pe">বদলাও</button>':'')+'</div>'+
+    '<div class="card pf-head"><div class="pf-top">'+photoHTML({photo:u.photo},'p-photo pf-pic')+
+      '<div class="pf-id"><h3>'+esc(dispName(u))+'</h3>'+
+      '<p class="p-mad">@'+esc(u.username)+'</p>'+
+      '<div>'+(u.role==='main'?'<span class="badge gold">মেইন অ্যাডমিন</span>':'<span class="badge on">সাব-অ্যাডমিন</span>')+'</div></div></div>'+
+      '<dl class="kv">'+
+      (u.phone?'<dt>মোবাইল</dt><dd>'+esc(u.phone)+'</dd>':'')+
+      '<dt>যোগ দিয়েছে</dt><dd>'+esc(fmtDate(u.created_at))+'</dd>'+
+      (u.created_by?'<dt>যোগ করেছে</dt><dd>'+esc(u.created_by)+'</dd>':'')+
+      '</dl></div>'+
+    '<div class="card"><h3>লাইসেন্সের হিসাব</h3><div class="vstats">'+
+      '<div class="vstat v1"><div class="n">'+mine.length+'</div><div class="l">মোট বানিয়েছে</div></div>'+
+      '<div class="vstat v3"><div class="n">'+act+'</div><div class="l">চালু</div></div>'+
+      '<div class="vstat v2"><div class="n">'+rev+'</div><div class="l">বাতিল</div></div></div>'+
+      (q.limit?'<h3 style="margin-top:6px">লাইসেন্স লিমিট</h3>'+quotaBar(q):'<p class="hint">লাইসেন্স লিমিট: সীমা নেই (আনলিমিটেড)</p>')+'</div>';
+    countUp(v);
+    const pe=$('#pe'); if(pe) pe.onclick=()=>vEditProfile(target);
+  }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+async function vEditProfile(username){
+  const v=$('#view'); v.innerHTML='<div class="boot">আসছে…</div>';
+  try{
+    const target=username||SESS.user.username;
+    if(!isMain()&&target!==SESS.user.username){ v.innerHTML='<div class="err">অনুমতি নেই।</div>'; return; }
+    const users=await DB.loadUsers(true);
+    const u=users.find(x=>x.username===target);
+    if(!u){ v.innerHTML='<div class="err">ব্যবহারকারী পাওয়া যায়নি।</div>'; return; }
+    let newPhoto=u.photo||'';
+    v.innerHTML='<div class="page-head"><h2><button class="btn btn-ghost btn-sm" id="bk">‹ পেছনে</button> প্রোফাইল বদলাও</h2></div>'+
+    '<div class="card" style="max-width:560px"><div id="ferr" class="err" style="display:none"></div>'+
+    '<div class="p-top">'+photoHTML({photo:newPhoto})+'<div style="flex:1"><label class="f" style="margin-top:0">ছবি</label>'+
+    '<input type="file" id="ph" accept="image/*"></div></div>'+
+    '<label class="f">নাম</label><input type="text" id="dn" value="'+esc(u.display_name||'')+'" placeholder="যেমন: মোঃ রহিম">'+
+    '<label class="f">মোবাইল</label><input type="text" id="ph2" value="'+esc(u.phone||'')+'" placeholder="01XXXXXXXXX">'+
+    (isMain()&&u.role!=='main'?'<label class="f">লাইসেন্স লিমিট (টি)</label><input type="number" id="lm" min="0" value="'+(u.license_limit||'')+'" placeholder="খালি = আনলিমিটেড"><p class="hint">০ বা খালি রাখলে সীমা থাকবে না।</p>':'')+
+    '<div class="row-btns"><button class="btn btn-primary" id="sv">সংরক্ষণ</button></div></div>';
+    $('#bk').onclick=()=>vProfile(target);
+    $('#ph').onchange=async e=>{
+      try{ newPhoto=await readPhoto(e.target.files[0]);
+        const p=$('.p-top .p-photo',v); if(p) p.outerHTML=photoHTML({photo:newPhoto});
+      }catch(err){ showErr(err.message); e.target.value=''; }
+    };
+    $('#sv').onclick=async ev=>{
+      hideErr(); const b=ev.target; busy(b,true);
+      try{
+        u.display_name=$('#dn').value.trim(); u.phone=$('#ph2').value.trim(); u.photo=newPhoto;
+        const lm=$('#lm'); if(lm) u.license_limit=parseInt(lm.value,10)>0?parseInt(lm.value,10):null;
+        await DB.saveUsers(users);
+        vProfile(target);
+      }catch(e){ showErr(e.message); }
+      busy(b,false);
+    };
+  }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
+}
+
 /* ---------- sub-admins (main only) ---------- */
 async function vUsers(){
   if(!isMain()){ $('#view').innerHTML='<div class="err">শুধু মেইন অ্যাডমিন।</div>'; return; }
@@ -590,18 +693,31 @@ async function vUsers(){
   try{
     const users=await DB.loadUsers(true);
     const subs=users.filter(u=>u.role!=='main');
+    const all=await DB.loadLicenses();
+    const qmap={};
+    for(const u of subs){
+      const lim=Number(u.license_limit)>0?Number(u.license_limit):null;
+      const used=all.filter(l=>l.issued_by===u.username).length;
+      qmap[u.username]={limit:lim,used:used,left:lim===null?null:Math.max(0,lim-used)};
+    }
     v.innerHTML='<div class="page-head"><h2>সাব-অ্যাডমিন</h2></div>'+
     '<div class="card"><h3>তালিকা</h3>'+
-    (subs.length?'<div class="tbl-wrap"><table><thead><tr><th>নাম</th><th>যোগ করেছে</th><th>তারিখ</th><th></th></tr></thead><tbody>'+
-      subs.map(u=>'<tr><td><b>'+esc(u.username)+'</b></td><td>'+esc(u.created_by||'—')+'</td><td>'+esc(fmtDate(u.created_at))+'</td>'+
-      '<td><button class="btn btn-danger btn-sm" data-del="'+esc(u.username)+'">মুছো</button></td></tr>').join('')+'</tbody></table></div>'
+    (subs.length?'<div class="tbl-wrap"><table><thead><tr><th>সাব-অ্যাডমিন</th><th>লাইসেন্স লিমিট</th><th>যোগ করেছে</th><th></th></tr></thead><tbody>'+
+      subs.map(u=>'<tr><td><div class="c-cell">'+photoHTML({photo:u.photo},'p-thumb')+'<div><b>'+esc(dispName(u))+'</b><br><small class="hint">@'+esc(u.username)+'</small></div></div></td>'+
+      '<td>'+quotaBar(qmap[u.username])+'</td><td>'+esc(u.created_by||'—')+'<br><small class="hint">'+esc(fmtDate(u.created_at))+'</small></td>'+
+      '<td style="white-space:nowrap"><button class="btn btn-ghost btn-sm" data-prof="'+esc(u.username)+'">প্রোফাইল</button> '+
+      '<button class="btn btn-danger btn-sm" data-del="'+esc(u.username)+'">মুছো</button></td></tr>').join('')+'</tbody></table></div>'
       :'<p class="hint">এখনো কেউ নেই।</p>')+'</div>'+
     '<div class="card" style="max-width:560px"><h3>নতুন যোগ করো</h3>'+
     '<div id="ferr" class="err" style="display:none"></div><div id="share"></div>'+
-    '<label class="f">ইউজারনেম</label><input type="text" id="nu" autocomplete="off">'+
-    '<label class="f">পাসওয়ার্ড</label><input type="password" id="np" autocomplete="new-password">'+
-    '<p class="hint">সে শুধু নিজের বানানো লাইসেন্স দেখতে পাবে। বাতিল করতে পারবে না।</p>'+
+    '<label class="f">নাম</label><input type="text" id="nd" placeholder="যেমন: মোঃ রহিম">'+
+    '<label class="f">ইউজারনেম *</label><input type="text" id="nu" autocomplete="off">'+
+    '<label class="f">মোবাইল</label><input type="text" id="nph" placeholder="01XXXXXXXXX">'+
+    '<label class="f">পাসওয়ার্ড *</label><input type="password" id="np" autocomplete="new-password">'+
+    '<label class="f">লাইসেন্স লিমিট (টি)</label><input type="number" id="nl" min="0" placeholder="খালি = আনলিমিটেড">'+
+    '<p class="hint">সে শুধু নিজের বানানো লাইসেন্স দেখতে পাবে। বাতিল করতে পারবে না। লিমিট শেষ হলে নতুন লাইসেন্স বানাতে পারবে না।</p>'+
     '<div class="row-btns"><button class="btn btn-primary" id="ngo">যোগ করো</button></div></div>';
+    $$('[data-prof]').forEach(x=>x.onclick=()=>vProfile(x.dataset.prof));
     $$('[data-del]').forEach(x=>x.onclick=async()=>{
       if(!confirm('“'+x.dataset.del+'” মুছে ফেলবে?')) return;
       await DB.saveUsers(users.filter(u=>u.username!==x.dataset.del)); vUsers();
@@ -613,8 +729,10 @@ async function vUsers(){
         if(!un) throw new Error('ইউজারনেম লেখো।');
         if(pw.length<6) throw new Error('পাসওয়ার্ড ৬ অক্ষরের বেশি দাও।');
         if(users.some(u=>u.username===un)) throw new Error('এই নামে আগেই আছে।');
-        const salt=randHex(8);
+        const salt=randHex(8), limN=parseInt((document.querySelector('#nl')||{value:''}).value,10);
         users.push({username:un,salt:salt,pass_hash:await sha256hex(salt+':'+pw),role:'sub',
+          display_name:document.querySelector('#nd').value.trim(),phone:document.querySelector('#nph').value.trim(),
+          license_limit:limN>0?limN:null,
           created_by:SESS.user.username,created_at:nowSec(),
           secrets_enc:await encSecrets(pw,salt,{pat:SESS.secrets.pat,seed:SESS.secrets.seed})});
         await DB.saveUsers(users);
