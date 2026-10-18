@@ -498,6 +498,27 @@ function chatWidgetKill(){
   const f=document.querySelector('#chatFab'); if(f) f.parentNode.remove();
 }
 
+/* সুন্দর কনফার্ম ডায়ালগ (সব জায়গায় একই) */
+function confirmDlg(title,msg,okText,danger){
+  return new Promise(res=>{
+    const bg=document.createElement('div');
+    bg.className='modal-bg';
+    bg.innerHTML='<div class="modal cdlg">'+
+      '<div class="cdlg-ic">'+(danger?'⚠️':'💬')+'</div>'+
+      '<h3>'+esc(title)+'</h3><p>'+esc(msg)+'</p>'+
+      '<div class="row-btns" style="justify-content:center;margin-top:20px">'+
+      '<button class="btn '+(danger?'btn-danger':'btn-primary')+'" id="cfOk">'+esc(okText||'হ্যাঁ, করো')+'</button>'+
+      '<button class="btn btn-ghost" id="cfNo">না, থাক</button></div></div>';
+    document.body.appendChild(bg);
+    const done=v=>{ bg.remove(); res(v); };
+    bg.querySelector('#cfOk').onclick=()=>done(true);
+    bg.querySelector('#cfNo').onclick=()=>done(false);
+    bg.onclick=e=>{ if(e.target===bg) done(false); };
+    const esc2=e=>{ if(e.key==='Escape') done(false); };
+    document.addEventListener('keydown',esc2,{once:true});
+  });
+}
+
 function vShell(view){
   CV=view||'dashboard';
   if(!SESS.user){ vLogin(); return; }
@@ -623,6 +644,22 @@ async function vDash(){
         '</div>';
         const st=v.querySelector('.stats');
         if(st) st.parentNode.insertBefore(box, st.nextSibling); else v.appendChild(box);
+        const users0b=await DB.loadUsers(true);
+        const me2=users0b.find(x=>x.username===SESS.user.username)||{};
+        const pkgs2=(me2.packages||[]).slice().reverse();
+        if(pkgs2.length){
+          const pc=document.createElement('div');
+          pc.className='card';
+          const totGot=pkgs2.reduce((sm,p)=>sm+Number(p.qty||0),0);
+          const totOn=pkgs2.filter(p=>p.status==='active').reduce((sm,p)=>sm+Number(p.qty||0),0);
+          pc.innerHTML='<h3>তোমার প্যাকেজ</h3>'+
+          '<p style="font-size:14.5px">মোট পেয়েছ: <b>'+totGot+'টি</b> &nbsp;•&nbsp; চালু আছে: <b style="color:var(--teal-dark)">'+totOn+'টি</b></p>'+
+          '<div class="tbl-wrap"><table><thead><tr><th>প্যাকেজ</th><th>তারিখ</th><th>অবস্থা</th></tr></thead><tbody>'+
+          pkgs2.map(p=>'<tr><td><b>'+p.qty+'টি</b></td><td>'+esc(fmtDate(p.given_at))+'</td>'+
+          '<td>'+(p.status==='active'?'<span class="badge on">চালু</span>':'<span class="badge off">বাতিল করা হয়েছে</span>')+'</td></tr>').join('')+
+          '</tbody></table></div>';
+          box.parentNode.insertBefore(pc, box.nextSibling);
+        }
       }
     }
   }catch(e){ v.innerHTML='<div class="err">'+esc(e.message)+'</div>'; }
@@ -701,7 +738,7 @@ async function vCustomer(id){
   const cp=$('#cp'); if(cp) cp.onclick=()=>{ navigator.clipboard.writeText(l.key); cp.textContent='কপি হয়েছে ✓'; };
   const rv=$('#rv');
   if(rv) rv.onclick=async()=>{
-    if(!confirm('“'+l.customer_name+'”-এর লাইসেন্স বাতিল করবে?')) return;
+    if(!await confirmDlg('লাইসেন্স বাতিল','“'+l.customer_name+'”-এর লাইসেন্স বাতিল করবে? বাতিল করলে তার সফটওয়্যার বন্ধ হয়ে যাবে।','বাতিল করো',true)) return;
     rv.disabled=true; rv.textContent='হচ্ছে…';
     try{
       const all=await DB.loadLicenses();
@@ -714,7 +751,7 @@ async function vCustomer(id){
   };
   const ac=$('#ac');
   if(ac) ac.onclick=async()=>{
-    if(!confirm('"'+l.customer_name+'"-এর লাইসেন্স আবার সচল করবে?')) return;
+    if(!await confirmDlg('লাইসেন্স সচল','"'+l.customer_name+'"-এর লাইসেন্স আবার সচল করবে?','সচল করো',false)) return;
     ac.disabled=true; ac.textContent='হচ্ছে…';
     try{
       const all=await DB.loadLicenses();
@@ -730,7 +767,7 @@ async function vCustomer(id){
     const msg=l.status==='revoked'
       ? '"'+l.customer_name+'"-এর বাতিল লাইসেন্স সম্পূর্ণ ডিলিট করবে? (তার সফটওয়্যার বন্ধই থাকবে)'
       : '"'+l.customer_name+'"-এর লাইসেন্স ডিলিট করবে?';
-    if(!confirm(msg)) return;
+    if(!await confirmDlg('লাইসেন্স ডিলিট',msg,'ডিলিট করো',true)) return;
     dl.disabled=true; dl.textContent='হচ্ছে…';
     try{
       const wasRevoked=l.status==='revoked';
@@ -920,7 +957,7 @@ async function vProfile(username){
       qc.innerHTML=ph;
       v.insertBefore(qc, v.children[2]||null);
       qc.querySelectorAll('[data-cpkg]').forEach(b=>b.onclick=async ev=>{
-        if(!confirm('এই প্যাকেজ ক্যানসেল করবে?')) return;
+        if(!await confirmDlg('প্যাকেজ ক্যানসেল','এই প্যাকেজটি ক্যানসেল করবে? ক্যানসেল করলে এই প্যাকেজের লাইসেন্স সংখ্যা তার কোটা থেকে বাদ যাবে।','ক্যানসেল করো',true)) return;
         const btn=ev.target; busy(btn,true);
         try{
           const users2=await DB.loadUsers(true);
@@ -1018,7 +1055,7 @@ async function vUsers(){
     '<div class="row-btns"><button class="btn btn-primary" id="ngo">যোগ করো</button></div></div>';
     $$('[data-prof]').forEach(x=>x.onclick=()=>vProfile(x.dataset.prof));
     $$('[data-del]').forEach(x=>x.onclick=async()=>{
-      if(!confirm('“'+x.dataset.del+'” মুছে ফেলবে?')) return;
+      if(!await confirmDlg('সাব-অ্যাডমিন মুছো','“'+x.dataset.del+'” কে মুছে ফেলবে?','মুছে ফেলো',true)) return;
       await DB.saveUsers(users.filter(u=>u.username!==x.dataset.del)); vUsers();
     });
     $('#ngo').onclick=async ev=>{
