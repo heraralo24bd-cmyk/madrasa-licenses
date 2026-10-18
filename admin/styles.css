@@ -256,3 +256,15 @@ input[type=file]:hover{border-color:var(--teal);background:var(--teal-bg)}
 
 /* শুধু অ্যানিমেশন কমাতে চাইলে */
 @media(prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* ---------- প্রোফাইল পেজ ---------- */
+.pf-head{overflow:hidden}
+.pf-head::before{content:'';position:absolute;top:0;left:0;right:0;height:110px;
+  background:linear-gradient(120deg,#0a1f38,#1d4a73 60%,#0d5c43);opacity:.96}
+.pf-top{position:relative;display:flex;gap:20px;align-items:flex-end;margin-bottom:8px;flex-wrap:wrap}
+.pf-pic{width:120px;height:120px;border-width:4px;margin-top:36px;box-shadow:0 12px 30px rgba(12,35,64,.35)}
+.pf-id{padding-bottom:6px}
+.pf-id h3{margin:0 0 4px;font-size:24px;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.35)}
+.pf-id .p-mad{color:rgba(255,255,255,.85)}
+.pf-head .kv{position:relative}
+@media(max-width:640px){.pf-pic{width:96px;height:96px;margin-top:48px}.pf-id h3{font-size:20px}}
