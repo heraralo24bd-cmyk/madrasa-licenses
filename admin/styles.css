@@ -288,3 +288,18 @@ input[type=file]:hover{border-color:var(--teal);background:var(--teal-bg)}
 .pf-row .k svg{width:17px;height:17px;color:var(--gold-deep);flex-shrink:0}
 .pf-row .v{font-weight:700;color:var(--navy-soft);font-size:14.5px}
 @media(max-width:640px){.pf-name{font-size:25px}.pf-main{padding:0 16px 22px}}
+
+/* ---------- কোটা ডোনাট মিটার ---------- */
+.dq-card{text-align:center}
+.dq-card h3{justify-content:center}
+.dq-card h3::before{display:none}
+.dq-wrap{display:flex;align-items:center;justify-content:center;gap:28px;flex-wrap:wrap;padding:8px 0 4px}
+.dq{width:200px;height:200px;filter:drop-shadow(0 10px 22px rgba(12,35,64,.18));animation:pop .6s var(--ease) both}
+.dq-num{font-family:"Baloo Da 2",sans-serif;font-size:44px;font-weight:800;fill:var(--navy)}
+.dq-lab{font-size:15px;fill:var(--muted);font-weight:600}
+.dq-legend{display:flex;flex-direction:column;gap:12px;text-align:left}
+.dq-li{display:flex;align-items:center;gap:10px;font-size:15px;color:var(--navy-soft);
+  background:linear-gradient(135deg,#f7fafd,#eef3fa);border:1px solid rgba(219,228,240,.8);
+  border-radius:12px;padding:10px 16px;min-width:190px}
+.dq-li b{margin-left:auto;font-family:"Baloo Da 2",sans-serif;font-size:18px;color:var(--navy)}
+.dq-li .dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}
