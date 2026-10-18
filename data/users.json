@@ -22,5 +22,20 @@
       "iv": "7d5865155c12c055931e9928",
       "ct": "0bFiJEWhNXB9UyjA3FV11t9Ogg_MN8X5HMZT5szR7uZYXxvhV0pPiGsoy8czEjDjSiCXIHuclV06ruk7sNgaj_7bTr-HGAN4YkV8ZRse6jSxdovO7GXwvG0mTzpDQ-QYpf5UfSDIQWVd14Y4kpzhcyA2S031sNs"
     }
+  },
+  {
+    "username": "korim",
+    "salt": "caf0d04cff0dad96",
+    "pass_hash": "78fbab6d88ed5dc3bc2f36bd8861d51b52c8b81dee06e4960be37ee8a542779a",
+    "role": "sub",
+    "display_name": "korim",
+    "phone": "01919345145",
+    "license_limit": 11,
+    "created_by": "ruhul",
+    "created_at": 1792305480,
+    "secrets_enc": {
+      "iv": "2c9a4b0716d95b46e5c1feb7",
+      "ct": "bIqNegjleBn24PgOk39305jryEHe369RPC_eqRs_aSPLlTDerqn4YxX4BJ1m76XWr2xdq-eTCOKcFX-T2rNtDb2dogMElfRgYbScUgMzVDsIzOtQO6tXJMjuF-5Zx4zMfIejr_ubED4fSedRY3cICZiJvnRk28o"
+    }
   }
 ]
