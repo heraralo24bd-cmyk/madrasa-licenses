@@ -10,5 +10,17 @@
       "iv": "80ae01999de51124f1e9361e",
       "ct": "W2KWuv3If-Qx-iLtkjx8T_a6tCd5E7_KWTlD7z71mNewtJcqTPxAtUYdL3gOPLzq8moq2HEeB4V-Z5S0ZPlpuQ9zvyBOLoubRt_3DUqEad_B93wDkEu0OrYub9dIX2XtBs8m_KcS2o-eNLRdRwMUqtgJqtGanJA"
     }
+  },
+  {
+    "username": "omor faruk",
+    "salt": "61abefefad4a7b4c",
+    "pass_hash": "2fcbfc23644c0a931c845005f8cab2805f62ff89948304d9e6fa030e7dc522ca",
+    "role": "sub",
+    "created_by": "ruhul",
+    "created_at": 1792283674,
+    "secrets_enc": {
+      "iv": "7d5865155c12c055931e9928",
+      "ct": "0bFiJEWhNXB9UyjA3FV11t9Ogg_MN8X5HMZT5szR7uZYXxvhV0pPiGsoy8czEjDjSiCXIHuclV06ruk7sNgaj_7bTr-HGAN4YkV8ZRse6jSxdovO7GXwvG0mTzpDQ-QYpf5UfSDIQWVd14Y4kpzhcyA2S031sNs"
+    }
   }
 ]
