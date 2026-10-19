@@ -138,5 +138,25 @@
       "madrasa_address": "",
       "photo": ""
     }
+  },
+  {
+    "license_id": "acee17c14df857d253821da341504e86",
+    "customer_name": "ami",
+    "device_code": "MM-PC-176aca6820d329bb2dfee06af90906ffcba6f220ea4a417e635763cc7ecf9871",
+    "days": 365,
+    "issued_at": 1792416332,
+    "expires_at": 1823952332,
+    "issued_by": "omor faruk",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImFjZWUxN2MxNGRmODU3ZDI1MzgyMWRhMzQxNTA0ZTg2IiwiY3VzdG9tZXJfbmFtZSI6ImFtaSIsImRldmljZV9pZCI6IjE3NmFjYTY4MjBkMzI5YmIyZGZlZTA2YWY5MDkwNmZmY2JhNmYyMjBlYTRhNDE3ZTYzNTc2M2NjN2VjZjk4NzEiLCJpc3N1ZWRfYXQiOjE3OTI0MTYzMzIsImV4cGlyZXNfYXQiOjE4MjM5NTIzMzJ9.AQNsClhN6-XPTfqwl3zsElCHOyZZvnfmbv83lm0oFHs_FBsWDlbmnoSYyZ9mFPX-1S51c8Nm5ysze2UPx6ZZBQ",
+    "customer": {
+      "name": "ami",
+      "mobile": "",
+      "email": "",
+      "address": "",
+      "madrasa": "",
+      "madrasa_address": "",
+      "photo": ""
+    }
   }
 ]
