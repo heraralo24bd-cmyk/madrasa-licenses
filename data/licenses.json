@@ -87,7 +87,7 @@
     "issued_at": 1792394829,
     "expires_at": 1792567629,
     "issued_by": "ruhul",
-    "status": "revoked",
+    "status": "active",
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImUzYThiMjg5YzBhMGJjMzYyMTI0MDMxMzZmNDk1NWZlIiwiY3VzdG9tZXJfbmFtZSI6Im1kIHJ1aHVsIGFtaW4iLCJkZXZpY2VfaWQiOiJkMzkzYjE1ODQ3ZmUxYzcwNmRjYzVlNGRlNDZjOWRlZDEwMWY2ZTk5YTE0ZmIxNzJjNTljZDg1ZjBjNmMxZTU2IiwiaXNzdWVkX2F0IjoxNzkyMzk0ODI5LCJleHBpcmVzX2F0IjoxNzkyNTY3NjI5fQ.ewMW4vcnA-2pqcFMVQyhJewgljGL1IzBqSUyBcKR7nJKYpPUA6LsndW6Rmnn1_cyq-KRacxDqTHI7yoQKr-JDg",
     "customer": {
       "name": "md ruhul amin",
@@ -97,8 +97,6 @@
       "madrasa": "",
       "madrasa_address": "",
       "photo": ""
-    },
-    "revoked_at": 1792395236,
-    "revoked_by": "ruhul"
+    }
   }
 ]
