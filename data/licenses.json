@@ -80,26 +80,6 @@
     }
   },
   {
-    "license_id": "e3a8b289c0a0bc36212403136f4955fe",
-    "customer_name": "md ruhul amin",
-    "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
-    "days": 2,
-    "issued_at": 1792394829,
-    "expires_at": 1792567629,
-    "issued_by": "ruhul",
-    "status": "active",
-    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImUzYThiMjg5YzBhMGJjMzYyMTI0MDMxMzZmNDk1NWZlIiwiY3VzdG9tZXJfbmFtZSI6Im1kIHJ1aHVsIGFtaW4iLCJkZXZpY2VfaWQiOiJkMzkzYjE1ODQ3ZmUxYzcwNmRjYzVlNGRlNDZjOWRlZDEwMWY2ZTk5YTE0ZmIxNzJjNTljZDg1ZjBjNmMxZTU2IiwiaXNzdWVkX2F0IjoxNzkyMzk0ODI5LCJleHBpcmVzX2F0IjoxNzkyNTY3NjI5fQ.ewMW4vcnA-2pqcFMVQyhJewgljGL1IzBqSUyBcKR7nJKYpPUA6LsndW6Rmnn1_cyq-KRacxDqTHI7yoQKr-JDg",
-    "customer": {
-      "name": "md ruhul amin",
-      "mobile": "01733445568",
-      "email": "m",
-      "address": "",
-      "madrasa": "",
-      "madrasa_address": "",
-      "photo": ""
-    }
-  },
-  {
     "license_id": "dbc9e39f6c4d7eeb82cb2ef1426703af",
     "customer_name": "Addmin",
     "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
