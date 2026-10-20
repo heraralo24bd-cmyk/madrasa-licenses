@@ -256,6 +256,9 @@ function visibleLicenses(list){
 
 /* ---------- customer profile + validity dashboard ---------- */
 function custOf(l){ return (l&&l.customer)||{}; }
+function custKey(l){ if(!l) return ''; if(l.customer_id) return 'id:'+l.customer_id; const c=custOf(l); return 'nm:'+String(l.customer_name||'').trim().toLowerCase()+'|'+String(c.mobile||'').trim(); }
+function fmtTk(n){ return Number(n||0).toLocaleString('en-US'); }
+let NEW_PREFILL=null;
 function validityInfo(l){
   const t=nowSec();
   if(l.expires_at==null)
@@ -661,16 +664,18 @@ async function vDash(){
         const act=rows.filter(l=>l.status!=='revoked').length, rev=rows.length-act;
         const box=document.createElement('div');
         box.className='card';
+        const users0b=await DB.loadUsers(true);
+        const me2=users0b.find(x=>x.username===SESS.user.username)||{};
+        const vmn=me2.valid_min>0?me2.valid_min:null, vmx=me2.valid_max>0?me2.valid_max:null;
+        const vrline=(vmn||vmx)?'<p style="margin:12px 0 0;font-size:14.5px">মেয়াদের সীমা: <b>'+(vmn||'—')+' – '+(vmx||'∞')+' দিন</b></p>':'';
         box.innerHTML='<h3>তোমার লাইসেন্স কোটা</h3><div class="qgrid">'+
         '<div class="qbox qb-used"><div class="qn">'+q.used+'</div><div class="ql">বানিয়েছে</div></div>'+
         '<div class="qbox qb-donut">'+quotaDonut(q,act,rev)+'</div>'+
         '<div class="qbox qb-rev"><div class="qn">'+rev+'</div><div class="ql">বাতিল</div></div>'+
         '<div class="qbox qb-total"><div class="qn">'+q.limit+'</div><div class="ql">মোট লিমিট</div></div>'+
-        '</div>';
+        '</div>'+vrline;
         const st=v.querySelector('.stats');
         if(st) st.parentNode.insertBefore(box, st.nextSibling); else v.appendChild(box);
-        const users0b=await DB.loadUsers(true);
-        const me2=users0b.find(x=>x.username===SESS.user.username)||{};
         const pkgs2=(me2.packages||[]).slice().reverse();
         if(pkgs2.length){
           const pc=document.createElement('div');
@@ -692,12 +697,12 @@ async function vDash(){
 function licRow(l){
   const c=custOf(l);
   return '<tr class="clickable" data-id="'+esc(l.license_id)+'"><td><div class="c-cell">'+photoHTML(c,'p-thumb')+'<b>'+esc(l.customer_name)+'</b></div></td>'+
-  '<td class="mono">'+esc(l.license_id.slice(0,10))+'…</td><td>'+esc(validity(l))+'</td><td>'+badge(l)+'</td>'+
+  '<td class="mono">'+esc(l.license_id.slice(0,10))+'…</td><td>'+esc(validity(l))+'</td><td>'+(l.price>0?'৳'+fmtTk(l.price):'<span class="hint">—</span>')+'</td><td>'+badge(l)+'</td>'+
   (isMain()?'<td>'+esc(l.issued_by||'—')+'</td>':'')+'<td>'+esc(fmtDate(l.issued_at))+'</td></tr>';
 }
 function licTable(rows){
   if(!rows.length) return '<p class="hint">এখনো কোনো লাইসেন্স নেই।</p>';
-  return '<div class="tbl-wrap"><table><thead><tr><th>গ্রাহক</th><th>লাইসেন্স</th><th>মেয়াদ</th><th>অবস্থা</th>'+
+  return '<div class="tbl-wrap"><table><thead><tr><th>গ্রাহক</th><th>লাইসেন্স</th><th>মেয়াদ</th><th>দাম</th><th>অবস্থা</th>'+
   (isMain()?'<th>বানিয়েছে</th>':'')+'<th>তারিখ</th></tr></thead><tbody>'+rows.map(licRow).join('')+'</tbody></table></div>';
 }
 const wireRows=r=>$$('tr.clickable',r).forEach(t=>t.onclick=()=>vCustomer(t.dataset.id));
@@ -732,6 +737,12 @@ async function vCustomer(id){
   const l=rows.find(x=>x.license_id===id);
   if(!l){ v.innerHTML='<div class="err">লাইসেন্স পাওয়া যায়নি।</div>'; return; }
   const c=custOf(l), vi=validityInfo(l), d=daysLeft(l.expires_at);
+  const ck=custKey(l);
+  const hist=rows.filter(x=>custKey(x)===ck).sort((a,b)=>(b.issued_at||0)-(a.issued_at||0));
+  const totSell=hist.reduce((sm,x)=>sm+(Number(x.price)||0),0);
+  const histHTML='<div class="card"><h3>লাইসেন্সের ইতিহাস ('+hist.length+'টি)</h3><div class="tbl-wrap"><table><thead><tr><th>তারিখ</th><th>মেয়াদ</th><th>দাম</th><th>অবস্থা</th><th></th></tr></thead><tbody>'+
+    hist.map(h=>'<tr><td>'+esc(fmtDate(h.issued_at))+'</td><td>'+esc(validity(h))+'</td><td>'+(h.price>0?'৳'+fmtTk(h.price):'—')+'</td><td>'+badge(h)+'</td><td>'+(h.license_id===id?'':'<button class="btn btn-ghost btn-sm" data-h="'+esc(h.license_id)+'">দেখো</button>')+'</td></tr>').join('')+
+    '</tbody></table></div><p style="font-size:15px;margin:10px 0 0">মোট বিক্রি: <b>৳'+fmtTk(totSell)+'</b></p></div>';
   const prof=[['মোবাইল',c.mobile],['ইমেইল',c.email],['ঠিকানা',c.address],['মাদরাসার ঠিকানা',c.madrasa_address]]
     .filter(x=>x[1]).map(x=>'<dt>'+x[0]+'</dt><dd>'+esc(x[1])+'</dd>').join('');
   v.innerHTML=
@@ -757,8 +768,11 @@ async function vCustomer(id){
   '<div class="row-btns">'+(l.key?'<button class="btn btn-ghost btn-sm" id="cp">কপি</button>':'')+
   (isMain()&&l.status!=='revoked'?'<button class="btn btn-danger btn-sm" id="rv">বাতিল করো</button>':'')+
   (isMain()&&l.status==='revoked'?'<button class="btn btn-primary btn-sm" id="ac">সচল করো</button>':'')+
-  (isMain()?'<button class="btn btn-ghost btn-sm" id="dl">ডিলিট</button>':'')+'</div><div id="mm"></div></div>';
+  (isMain()?'<button class="btn btn-ghost btn-sm" id="dl">ডিলিট</button>':'')+
+  (canEditL(l)?'<button class="btn btn-primary btn-sm" id="nw2">নতুন লাইসেন্স দাও</button>':'')+'</div><div id="mm"></div></div>'+histHTML;
   $('#bk').onclick=()=>vShell('licenses');
+  const nw2=$('#nw2'); if(nw2) nw2.onclick=()=>{ NEW_PREFILL={ckey:ck}; vShell('new'); };
+  $$('#view [data-h]').forEach(b=>b.onclick=()=>vCustomer(b.dataset.h));
   const ed=$('#ed'); if(ed) ed.onclick=()=>vEditCustomer(id);
   const cp=$('#cp'); if(cp) cp.onclick=()=>{ navigator.clipboard.writeText(l.key); cp.textContent='কপি হয়েছে ✓'; };
   const rv=$('#rv');
@@ -843,10 +857,11 @@ async function vEditCustomer(id){
       const nm=$('#nm').value.trim();
       if(!nm) throw new Error('নাম লেখো।');
       const all=await DB.loadLicenses();
-      const t=all.find(x=>x.license_id===id);
-      t.customer_name=nm;
-      t.customer={name:nm, mobile:$('#mb').value.trim(), email:$('#em').value.trim(),
+      const t0=all.find(x=>x.license_id===id);
+      const ck2=custKey(t0);
+      const nc={name:nm, mobile:$('#mb').value.trim(), email:$('#em').value.trim(),
         address:$('#ad').value.trim(), madrasa:$('#mn').value.trim(), madrasa_address:$('#ma').value.trim(), photo:photo};
+      all.forEach(x=>{ if(custKey(x)===ck2){ x.customer_name=nm; x.customer=Object.assign({},nc); } });
       await DB.saveLicenses(all);
       vCustomer(id);
     }catch(e){ showErr(e.message); }
@@ -857,6 +872,14 @@ async function vEditCustomer(id){
 /* ---------- new license ---------- */
 async function vNew(){
   const v=$('#view');
+  const me0=(await DB.loadUsers(true)).find(x=>x.username===SESS.user.username)||{};
+  const VR={vmin:me0.valid_min>0?me0.valid_min:null, vmax:me0.valid_max>0?me0.valid_max:null};
+  const vrange=(VR.vmin||VR.vmax)?'<p class="hint" style="font-weight:700;color:var(--navy)">তোমার অনুমোদিত মেয়াদ: '+(VR.vmin||1)+' – '+(VR.vmax||'∞')+' দিন</p>':'';
+  const all0=visibleLicenses(await DB.loadLicenses());
+  const groups={};
+  all0.forEach(l=>{ const k=custKey(l); if(!groups[k]) groups[k]={cid:l.customer_id||null,lic:l,count:0}; groups[k].count++; if((l.issued_at||0)>(groups[k].lic.issued_at||0)) groups[k].lic=l; });
+  const gkeys=Object.keys(groups).sort((a,b)=>(groups[b].lic.issued_at||0)-(groups[a].lic.issued_at||0));
+  const custOpts=gkeys.map(k=>{ const g=groups[k],cc=custOf(g.lic); return '<option value="'+esc(k)+'">'+esc(g.lic.customer_name||'—')+(cc.madrasa?' — '+esc(cc.madrasa):'')+' ('+g.count+'টি)</option>'; }).join('');
   let qnote='';
   if(!isMain()){
     const q=await quotaOf(SESS.user.username);
@@ -869,6 +892,8 @@ async function vNew(){
   v.innerHTML='<div class="page-head"><h2>নতুন লাইসেন্স</h2></div>'+qnote+
   '<div class="card" style="max-width:620px"><div id="ferr" class="err" style="display:none"></div><div id="fok"></div>'+
   '<h3>গ্রাহকের তথ্য</h3>'+
+  '<label class="f">আগের গ্রাহক (ঐচ্ছিক)</label><select id="pc"><option value="">➕ নতুন গ্রাহক</option>'+custOpts+'</select>'+
+  '<p class="hint">আগের গ্রাহক বাছলে তার তথ্য বসে যাবে — একই গ্রাহকের নামে বারবার নতুন লাইসেন্স দেওয়া যাবে।</p>'+
   '<div class="p-top">'+photoHTML({})+'<div style="flex:1"><label class="f" style="margin-top:0">ছবি (ইচ্ছা)</label>'+
   '<input type="file" id="ph" accept="image/*"></div></div>'+
   '<label class="f">গ্রাহকের নাম *</label><input type="text" id="c" placeholder="যেমন: মুহতামিম সাহেবের নাম">'+
@@ -877,7 +902,8 @@ async function vNew(){
   '<label class="f">ঠিকানা</label><textarea id="a" placeholder="গ্রাম/এলাকা, থানা, জেলা"></textarea>'+
   '<label class="f">মাদরাসার নাম</label><input type="text" id="mn" placeholder="মাদরাসার নাম">'+
   '<label class="f">মাদরাসার ঠিকানা</label><textarea id="ma" placeholder="মাদরাসার ঠিকানা"></textarea>'+
-  '<h3 style="margin-top:18px">লাইসেন্সের তথ্য</h3>'+
+  '<label class="f">দাম (টাকা)</label><input type="number" id="pr" min="0" placeholder="যেমন: 1500">'+
+  '<h3 style="margin-top:18px">লাইসেন্সের তথ্য</h3>'+vrange+
   '<label class="f">ডিভাইস কোড *</label><input type="text" id="d" class="mono" placeholder="MM-PC-…" autocomplete="off">'+
   '<p class="hint">গ্রাহকের সফটওয়্যারে যে কোড দেখায়, সেটা হুবহু বসাও।</p>'+
   '<label class="f">মেয়াদ</label><div class="dur-pick" id="dur">'+
@@ -889,6 +915,18 @@ async function vNew(){
     $('#cd').style.display=$('input',lb).value==='custom'?'block':'none';
   });
   let newPhoto='';
+  $('#pc').onchange=()=>{
+    hideErr();
+    const k=$('#pc').value;
+    const p0=$('.p-top .p-photo',v);
+    if(!k){ ['c','m','e','a','mn','ma','pr'].forEach(i=>{ $('#'+i).value=''; }); newPhoto=''; if(p0) p0.outerHTML=photoHTML({}); return; }
+    const g=groups[k]; if(!g) return; const cc=custOf(g.lic);
+    $('#c').value=g.lic.customer_name||''; $('#m').value=cc.mobile||''; $('#e').value=cc.email||'';
+    $('#a').value=cc.address||''; $('#mn').value=cc.madrasa||''; $('#ma').value=cc.madrasa_address||''; $('#pr').value='';
+    newPhoto=cc.photo||''; if(p0) p0.outerHTML=photoHTML({photo:newPhoto});
+  };
+  if(NEW_PREFILL&&NEW_PREFILL.ckey&&groups[NEW_PREFILL.ckey]){ $('#pc').value=NEW_PREFILL.ckey; $('#pc').onchange(); }
+  NEW_PREFILL=null;
   $('#ph').onchange=async e=>{
     hideErr();
     try{ newPhoto=await readPhoto(e.target.files[0]);
@@ -905,9 +943,14 @@ async function vNew(){
       }
       const dv=$('input[name=dur]:checked').value;
       const days=dv==='lifetime'?null:(dv==='custom'?parseInt($('#nd').value,10):parseInt(dv,10));
+      if(VR.vmax&&days===null) throw new Error('আজীবন মেয়াদের লাইসেন্স বানানোর অনুমতি তোমার নেই (সর্বোচ্চ '+VR.vmax+' দিন)।');
+      if(days!==null){ if(VR.vmin&&days<VR.vmin) throw new Error('মেয়াদ কমপক্ষে '+VR.vmin+' দিন হতে হবে।'); if(VR.vmax&&days>VR.vmax) throw new Error('মেয়াদ সর্বোচ্চ '+VR.vmax+' দিন হতে পারবে।'); }
+      const price=Math.max(0,parseInt($('#pr').value,10)||0);
       const lic=buildLicense({customer:$('#c').value,deviceCode:$('#d').value,days:days,seedB64:SESS.secrets.seed});
       const all=await DB.loadLicenses();
-      all.push({license_id:lic.license_id,customer_name:lic.customer_name,device_code:lic.device_code,
+      let cid=null; const sk=$('#pc').value;
+      if(sk&&groups[sk]){ const gg=groups[sk]; cid=gg.cid||('cus_'+randHex(6)); if(!gg.cid) all.forEach(x=>{ if(custKey(x)===sk) x.customer_id=cid; }); }
+      all.push({license_id:lic.license_id,customer_id:cid,price:price,customer_name:lic.customer_name,device_code:lic.device_code,
         days:lic.days,issued_at:lic.issued_at,expires_at:lic.expires_at,issued_by:SESS.user.username,status:'active',key:lic.key,
         customer:{name:lic.customer_name,mobile:$('#m').value.trim(),email:$('#e').value.trim(),address:$('#a').value.trim(),
           madrasa:$('#mn').value.trim(),madrasa_address:$('#ma').value.trim(),photo:newPhoto}});
@@ -918,7 +961,7 @@ async function vNew(){
       '<p class="hint">মেয়াদ: '+esc(validity(lic))+'</p></div>';
       $('#cp2').onclick=e=>{ navigator.clipboard.writeText(lic.key); e.target.textContent='কপি হয়েছে ✓'; };
       $('#ag').onclick=()=>vShell('new');
-      $('#c').value=''; $('#d').value=''; $('#m').value=''; $('#e').value=''; $('#a').value=''; $('#mn').value=''; $('#ma').value=''; newPhoto='';
+      $('#c').value=''; $('#d').value=''; $('#m').value=''; $('#e').value=''; $('#a').value=''; $('#mn').value=''; $('#ma').value=''; $('#pr').value=''; $('#pc').value=''; newPhoto='';
     }catch(e){ showErr(e.message); }
     busy(b,false);
   };
@@ -1002,6 +1045,29 @@ async function vProfile(username){
         '<p class="hint">দেওয়ার সাথে সাথে তার ড্যাশবোর্ডের মিটারে যোগ হবে। ক্যানসেল করলে ওই প্যাকেজের সংখ্যা বাদ যাবে।</p>';
       qc.innerHTML=ph;
       v.insertBefore(qc, v.children[2]||null);
+      const vc=document.createElement('div');
+      vc.className='card'; vc.style.borderRight='4px solid var(--teal-dark)';
+      const curR=(u.valid_min>0||u.valid_max>0)?('বর্তমান: '+(u.valid_min>0?u.valid_min+' দিন':'—')+' থেকে '+(u.valid_max>0?u.valid_max+' দিন':'সীমা নেই')):'বর্তমান: সীমা নেই';
+      vc.innerHTML='<h3>লাইসেন্স মেয়াদ সীমা</h3><div id="verr" class="err" style="display:none"></div>'+
+        '<p class="hint">এই সাব-অ্যাডমিন কত দিন থেকে কত দিন মেয়াদের লাইসেন্স বানাতে পারবে। খালি রাখলে সীমা নেই।</p>'+
+        '<p style="font-size:14.5px">'+curR+'</p>'+
+        '<div style="display:flex;gap:10px;flex-wrap:wrap">'+
+        '<div style="flex:1;min-width:140px"><label class="f" style="margin-top:0">সর্বনিম্ন (দিন)</label><input type="number" id="vmin" min="1" max="3650" value="'+(u.valid_min>0?u.valid_min:'')+'" placeholder="যেমন: 30"></div>'+
+        '<div style="flex:1;min-width:140px"><label class="f" style="margin-top:0">সর্বোচ্চ (দিন)</label><input type="number" id="vmax" min="1" max="3650" value="'+(u.valid_max>0?u.valid_max:'')+'" placeholder="যেমন: 365"></div></div>'+
+        '<div class="row-btns"><button class="btn btn-gold" id="vsv">সংরক্ষণ</button>'+((u.valid_min>0||u.valid_max>0)?'<button class="btn btn-ghost" id="vclr">সীমা তুলে দাও</button>':'')+'</div>';
+      v.insertBefore(vc, v.children[3]||null);
+      $('#vsv').onclick=async ev=>{ const b=ev.target; busy(b,true);
+        try{
+          const mn=parseInt($('#vmin').value,10)||null, mx=parseInt($('#vmax').value,10)||null;
+          if(mn&&mx&&mn>mx) throw new Error('সর্বনিম্ন সর্বোচ্চের চেয়ে বেশি হতে পারবে না।');
+          if((mn&&mn>3650)||(mx&&mx>3650)) throw new Error('মেয়াদ ৩৬৫০ দিনের বেশি নয়।');
+          const users2=await DB.loadUsers(true); const uu=users2.find(x=>x.username===target);
+          if(mn) uu.valid_min=mn; else delete uu.valid_min;
+          if(mx) uu.valid_max=mx; else delete uu.valid_max;
+          await DB.saveUsers(users2); vProfile(target);
+        }catch(e){ const ve=$('#verr'); if(ve){ ve.textContent=e.message; ve.style.display='block'; } }
+        busy(b,false); };
+      const vclr=$('#vclr'); if(vclr) vclr.onclick=async()=>{ const users2=await DB.loadUsers(true); const uu=users2.find(x=>x.username===target); delete uu.valid_min; delete uu.valid_max; await DB.saveUsers(users2); vProfile(target); };
       qc.querySelectorAll('[data-cpkg]').forEach(b=>b.onclick=async ev=>{
         if(!await confirmDlg('প্যাকেজ ক্যানসেল','এই প্যাকেজটি ক্যানসেল করবে? ক্যানসেল করলে এই প্যাকেজের লাইসেন্স সংখ্যা তার কোটা থেকে বাদ যাবে।','ক্যানসেল করো',true)) return;
         const btn=ev.target; busy(btn,true);
