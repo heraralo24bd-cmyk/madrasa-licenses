@@ -259,6 +259,7 @@ function custOf(l){ return (l&&l.customer)||{}; }
 function custKey(l){ if(!l) return ''; if(l.customer_id) return 'id:'+l.customer_id; const c=custOf(l); return 'nm:'+String(l.customer_name||'').trim().toLowerCase()+'|'+String(c.mobile||'').trim(); }
 function fmtTk(n){ return Number(n||0).toLocaleString('en-US'); }
 let NEW_PREFILL=null;
+async function myVR(){ const me0=(await DB.loadUsers(true)).find(x=>x.username===SESS.user.username)||{}; return {vmin:me0.valid_min>0?me0.valid_min:null, vmax:me0.valid_max>0?me0.valid_max:null}; }
 function validityInfo(l){
   const t=nowSec();
   if(l.expires_at==null)
@@ -731,6 +732,65 @@ async function vLicenses(){
 }
 
 /* ---------- customer dashboard ---------- */
+/* ---------- quick renew: direct license creation on customer dashboard ---------- */
+async function renewModal(l){
+  try{
+    if(!isMain()){
+      const q=await quotaOf(SESS.user.username);
+      if(q.limit&&q.left<=0){ alert('তোমার লাইসেন্স লিমিট শেষ। মেইন অ্যাডমিনের সাথে যোগাযোগ করো।'); return; }
+    }
+    const VR=await myVR();
+    const vrange=(VR.vmin||VR.vmax)?'<p class="hint" style="font-weight:700;color:var(--navy)">তোমার অনুমোদিত মেয়াদ: '+(VR.vmin||1)+' – '+(VR.vmax||'\u221E')+' দিন</p>':'';
+    const bg=document.createElement('div'); bg.className='modal-bg';
+    bg.innerHTML='<div class="modal"><h3>নতুন লাইসেন্স — '+esc(l.customer_name)+'</h3>'+
+      '<div id="rerr" class="err" style="display:none"></div>'+
+      '<label class="f">ডিভাইস কোড *</label><input type="text" id="rd" class="mono" value="'+esc(l.device_code||'')+'" autocomplete="off">'+
+      '<p class="hint">আগের কোডই বসানো আছে — Windows নতুন করে ইনস্টল হলে বদলে যাওয়া কোড বসাও।</p>'+
+      '<label class="f">মেয়াদ</label>'+vrange+'<div class="dur-pick" id="rdur">'+
+      [['lifetime','আজীবন'],['30','৩০ দিন'],['365','১ বছর'],['custom','অন্য…']].map((x,i)=>'<label class="'+(i===0?'sel':'')+'"><input type="radio" name="rdur" value="'+x[0]+'">'+x[1]+'</label>').join('')+
+      '</div><div id="rcd" style="display:none"><label class="f">কত দিন?</label><input type="number" id="rnd" min="1" max="3650" value="90"></div>'+
+      '<label class="f">দাম (টাকা)</label><input type="number" id="rpr" min="0" value="'+(l.price>0?l.price:'')+'" placeholder="যেমন: 1500">'+
+      '<div class="row-btns" style="margin-top:16px"><button class="btn btn-primary" id="rmk">তৈরি করো</button><button class="btn btn-ghost" id="rcl">বাতিল</button></div>'+
+      '<div id="rres"></div></div>';
+    document.body.appendChild(bg);
+    const close=()=>bg.remove();
+    bg.querySelector('#rcl').onclick=close;
+    bg.onclick=e=>{ if(e.target===bg) close(); };
+    bg.querySelectorAll('#rdur label').forEach(lb=>lb.onclick=()=>{
+      bg.querySelectorAll('#rdur label').forEach(x=>x.classList.remove('sel')); lb.classList.add('sel');
+      bg.querySelector('#rcd').style.display=lb.querySelector('input').value==='custom'?'block':'none';
+    });
+    bg.querySelector('#rmk').onclick=async ev=>{
+      const re=bg.querySelector('#rerr'); re.style.display='none';
+      const b=ev.target; busy(b,true,'বানাচ্ছি…');
+      try{
+        if(!isMain()){
+          const q2=await quotaOf(SESS.user.username);
+          if(q2.limit&&q2.left<=0) throw new Error('তোমার লাইসেন্স লিমিট শেষ।');
+        }
+        const dv=bg.querySelector('input[name=rdur]:checked').value;
+        const days=dv==='lifetime'?null:(dv==='custom'?parseInt(bg.querySelector('#rnd').value,10):parseInt(dv,10));
+        if(VR.vmax&&days===null) throw new Error('আজীবন মেয়াদের অনুমতি নেই (সর্বোচ্চ '+VR.vmax+' দিন)।');
+        if(days!==null){ if(VR.vmin&&days<VR.vmin) throw new Error('মেয়াদ কমপক্ষে '+VR.vmin+' দিন হতে হবে।'); if(VR.vmax&&days>VR.vmax) throw new Error('মেয়াদ সর্বোচ্চ '+VR.vmax+' দিন হতে পারবে।'); }
+        const price=Math.max(0,parseInt(bg.querySelector('#rpr').value,10)||0);
+        const lic=buildLicense({customer:l.customer_name,deviceCode:bg.querySelector('#rd').value,days:days,seedB64:SESS.secrets.seed});
+        const all=await DB.loadLicenses();
+        let cid=l.customer_id||('cus_'+randHex(6));
+        if(!l.customer_id) all.forEach(x=>{ if(custKey(x)===custKey(l)) x.customer_id=cid; });
+        const cc=Object.assign({},custOf(l)); cc.name=lic.customer_name;
+        all.push({license_id:lic.license_id,customer_id:cid,price:price,customer_name:lic.customer_name,device_code:lic.device_code,
+          days:lic.days,issued_at:lic.issued_at,expires_at:lic.expires_at,issued_by:SESS.user.username,status:'active',key:lic.key,customer:cc});
+        await DB.saveLicenses(all);
+        bg.querySelector('#rres').innerHTML='<div class="ok" style="margin-top:14px">লাইসেন্স তৈরি হয়েছে ✓</div>'+
+          '<div class="keybox">'+esc(lic.key)+'</div>'+
+          '<div class="row-btns"><button class="btn btn-gold btn-sm" id="rcp">কপি করো</button><button class="btn btn-primary btn-sm" id="rdone">ঠিক আছে</button></div>';
+        bg.querySelector('#rcp').onclick=e=>{ navigator.clipboard.writeText(lic.key); e.target.textContent='কপি হয়েছে ✓'; };
+        bg.querySelector('#rdone').onclick=()=>{ close(); vCustomer(l.license_id); };
+      }catch(e){ re.textContent=e.message; re.style.display='block'; }
+      busy(b,false);
+    };
+  }catch(e){ alert(e.message); }
+}
 async function vCustomer(id){
   const v=$('#view'); v.innerHTML='<div class="boot">আসছে…</div>';
   const rows=visibleLicenses(await DB.loadLicenses());
@@ -771,7 +831,7 @@ async function vCustomer(id){
   (isMain()?'<button class="btn btn-ghost btn-sm" id="dl">ডিলিট</button>':'')+
   (canEditL(l)?'<button class="btn btn-primary btn-sm" id="nw2">নতুন লাইসেন্স দাও</button>':'')+'</div><div id="mm"></div></div>'+histHTML;
   $('#bk').onclick=()=>vShell('licenses');
-  const nw2=$('#nw2'); if(nw2) nw2.onclick=()=>{ NEW_PREFILL={ckey:ck}; vShell('new'); };
+  const nw2=$('#nw2'); if(nw2) nw2.onclick=()=>renewModal(l);
   $$('#view [data-h]').forEach(b=>b.onclick=()=>vCustomer(b.dataset.h));
   const ed=$('#ed'); if(ed) ed.onclick=()=>vEditCustomer(id);
   const cp=$('#cp'); if(cp) cp.onclick=()=>{ navigator.clipboard.writeText(l.key); cp.textContent='কপি হয়েছে ✓'; };
@@ -872,8 +932,7 @@ async function vEditCustomer(id){
 /* ---------- new license ---------- */
 async function vNew(){
   const v=$('#view');
-  const me0=(await DB.loadUsers(true)).find(x=>x.username===SESS.user.username)||{};
-  const VR={vmin:me0.valid_min>0?me0.valid_min:null, vmax:me0.valid_max>0?me0.valid_max:null};
+  const VR=await myVR();
   const vrange=(VR.vmin||VR.vmax)?'<p class="hint" style="font-weight:700;color:var(--navy)">তোমার অনুমোদিত মেয়াদ: '+(VR.vmin||1)+' – '+(VR.vmax||'∞')+' দিন</p>':'';
   const all0=visibleLicenses(await DB.loadLicenses());
   const groups={};
