@@ -258,7 +258,6 @@ function visibleLicenses(list){
 function custOf(l){ return (l&&l.customer)||{}; }
 function custKey(l){ if(!l) return ''; if(l.customer_id) return 'id:'+l.customer_id; const c=custOf(l); return 'nm:'+String(l.customer_name||'').trim().toLowerCase()+'|'+String(c.mobile||'').trim(); }
 function fmtTk(n){ return Number(n||0).toLocaleString('en-US'); }
-let NEW_PREFILL=null;
 async function myVR(){ const me0=(await DB.loadUsers(true)).find(x=>x.username===SESS.user.username)||{}; return {vmin:me0.valid_min>0?me0.valid_min:null, vmax:me0.valid_max>0?me0.valid_max:null}; }
 function validityInfo(l){
   const t=nowSec();
@@ -934,11 +933,6 @@ async function vNew(){
   const v=$('#view');
   const VR=await myVR();
   const vrange=(VR.vmin||VR.vmax)?'<p class="hint" style="font-weight:700;color:var(--navy)">তোমার অনুমোদিত মেয়াদ: '+(VR.vmin||1)+' – '+(VR.vmax||'∞')+' দিন</p>':'';
-  const all0=visibleLicenses(await DB.loadLicenses());
-  const groups={};
-  all0.forEach(l=>{ const k=custKey(l); if(!groups[k]) groups[k]={cid:l.customer_id||null,lic:l,count:0}; groups[k].count++; if((l.issued_at||0)>(groups[k].lic.issued_at||0)) groups[k].lic=l; });
-  const gkeys=Object.keys(groups).sort((a,b)=>(groups[b].lic.issued_at||0)-(groups[a].lic.issued_at||0));
-  const custOpts=gkeys.map(k=>{ const g=groups[k],cc=custOf(g.lic); return '<option value="'+esc(k)+'">'+esc(g.lic.customer_name||'—')+(cc.madrasa?' — '+esc(cc.madrasa):'')+' ('+g.count+'টি)</option>'; }).join('');
   let qnote='';
   if(!isMain()){
     const q=await quotaOf(SESS.user.username);
@@ -951,8 +945,6 @@ async function vNew(){
   v.innerHTML='<div class="page-head"><h2>নতুন লাইসেন্স</h2></div>'+qnote+
   '<div class="card" style="max-width:620px"><div id="ferr" class="err" style="display:none"></div><div id="fok"></div>'+
   '<h3>গ্রাহকের তথ্য</h3>'+
-  '<label class="f">আগের গ্রাহক (ঐচ্ছিক)</label><select id="pc"><option value="">➕ নতুন গ্রাহক</option>'+custOpts+'</select>'+
-  '<p class="hint">আগের গ্রাহক বাছলে তার তথ্য বসে যাবে — একই গ্রাহকের নামে বারবার নতুন লাইসেন্স দেওয়া যাবে।</p>'+
   '<div class="p-top">'+photoHTML({})+'<div style="flex:1"><label class="f" style="margin-top:0">ছবি (ইচ্ছা)</label>'+
   '<input type="file" id="ph" accept="image/*"></div></div>'+
   '<label class="f">গ্রাহকের নাম *</label><input type="text" id="c" placeholder="যেমন: মুহতামিম সাহেবের নাম">'+
@@ -974,18 +966,6 @@ async function vNew(){
     $('#cd').style.display=$('input',lb).value==='custom'?'block':'none';
   });
   let newPhoto='';
-  $('#pc').onchange=()=>{
-    hideErr();
-    const k=$('#pc').value;
-    const p0=$('.p-top .p-photo',v);
-    if(!k){ ['c','m','e','a','mn','ma','pr'].forEach(i=>{ $('#'+i).value=''; }); newPhoto=''; if(p0) p0.outerHTML=photoHTML({}); return; }
-    const g=groups[k]; if(!g) return; const cc=custOf(g.lic);
-    $('#c').value=g.lic.customer_name||''; $('#m').value=cc.mobile||''; $('#e').value=cc.email||'';
-    $('#a').value=cc.address||''; $('#mn').value=cc.madrasa||''; $('#ma').value=cc.madrasa_address||''; $('#pr').value='';
-    newPhoto=cc.photo||''; if(p0) p0.outerHTML=photoHTML({photo:newPhoto});
-  };
-  if(NEW_PREFILL&&NEW_PREFILL.ckey&&groups[NEW_PREFILL.ckey]){ $('#pc').value=NEW_PREFILL.ckey; $('#pc').onchange(); }
-  NEW_PREFILL=null;
   $('#ph').onchange=async e=>{
     hideErr();
     try{ newPhoto=await readPhoto(e.target.files[0]);
@@ -1007,8 +987,7 @@ async function vNew(){
       const price=Math.max(0,parseInt($('#pr').value,10)||0);
       const lic=buildLicense({customer:$('#c').value,deviceCode:$('#d').value,days:days,seedB64:SESS.secrets.seed});
       const all=await DB.loadLicenses();
-      let cid=null; const sk=$('#pc').value;
-      if(sk&&groups[sk]){ const gg=groups[sk]; cid=gg.cid||('cus_'+randHex(6)); if(!gg.cid) all.forEach(x=>{ if(custKey(x)===sk) x.customer_id=cid; }); }
+      let cid=null;
       all.push({license_id:lic.license_id,customer_id:cid,price:price,customer_name:lic.customer_name,device_code:lic.device_code,
         days:lic.days,issued_at:lic.issued_at,expires_at:lic.expires_at,issued_by:SESS.user.username,status:'active',key:lic.key,
         customer:{name:lic.customer_name,mobile:$('#m').value.trim(),email:$('#e').value.trim(),address:$('#a').value.trim(),
@@ -1020,7 +999,7 @@ async function vNew(){
       '<p class="hint">মেয়াদ: '+esc(validity(lic))+'</p></div>';
       $('#cp2').onclick=e=>{ navigator.clipboard.writeText(lic.key); e.target.textContent='কপি হয়েছে ✓'; };
       $('#ag').onclick=()=>vShell('new');
-      $('#c').value=''; $('#d').value=''; $('#m').value=''; $('#e').value=''; $('#a').value=''; $('#mn').value=''; $('#ma').value=''; $('#pr').value=''; $('#pc').value=''; newPhoto='';
+      $('#c').value=''; $('#d').value=''; $('#m').value=''; $('#e').value=''; $('#a').value=''; $('#mn').value=''; $('#ma').value=''; $('#pr').value=''; newPhoto='';
     }catch(e){ showErr(e.message); }
     busy(b,false);
   };
