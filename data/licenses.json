@@ -158,5 +158,25 @@
       "madrasa_address": "বিজয় নগর,পলাশবাড়ী, সাভার,ঢাকা",
       "photo": ""
     }
+  },
+  {
+    "license_id": "f72b6b08e5400d2f4188d7d17d6c367b",
+    "customer_name": "Abdul majid",
+    "device_code": "MM-PC-96d10888e0550f98789a72612e2de07429910f491224d2e707f76ec24cf487e5",
+    "days": 30,
+    "issued_at": 1792478691,
+    "expires_at": 1795070691,
+    "issued_by": "ruhul",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImY3MmI2YjA4ZTU0MDBkMmY0MTg4ZDdkMTdkNmMzNjdiIiwiY3VzdG9tZXJfbmFtZSI6IkFiZHVsIG1hamlkIiwiZGV2aWNlX2lkIjoiOTZkMTA4ODhlMDU1MGY5ODc4OWE3MjYxMmUyZGUwNzQyOTkxMGY0OTEyMjRkMmU3MDdmNzZlYzI0Y2Y0ODdlNSIsImlzc3VlZF9hdCI6MTc5MjQ3ODY5MSwiZXhwaXJlc19hdCI6MTc5NTA3MDY5MX0.zlcGTPNcTSYOgREO1uZooH3IortnnfST-4hzjzA24ByINx_Ft5brFAKunsZh8e_78Y79VWGdpDfEzSyheOUQCA",
+    "customer": {
+      "name": "Abdul majid",
+      "mobile": "",
+      "email": "",
+      "address": "",
+      "madrasa": "",
+      "madrasa_address": "",
+      "photo": ""
+    }
   }
 ]
