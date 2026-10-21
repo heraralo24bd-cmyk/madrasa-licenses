@@ -129,6 +129,12 @@ const GH = {
       return {sha:d.sha, content:td.decode(b64stdDecode(d.content))};
     }catch(e){ if(e.status===404) return null; throw e; }
   },
+  async getRawFile(path){
+    const r=await fetch('https://raw.githubusercontent.com/'+REPO_OWNER+'/'+REPO_NAME+'/main/'+path);
+    if(r.status===404) return null;
+    if(!r.ok) throw new Error('নেটওয়ার্ক সমস্যা');
+    return {sha:null, content:await r.text()};
+  },
   async putFile(path, content, token, message){
     const cur=await this.getFile(path,token);
     for(let i=0;i<3;i++){
@@ -193,7 +199,8 @@ const DB = {
   users:null, licenses:null,
   async loadUsers(force){
     if(this.users&&!force) return this.users;
-    const f=await GH.getFile('data/users.json', SESS.secrets&&SESS.secrets.pat);
+    const tok=SESS.secrets&&SESS.secrets.pat;
+    const f=tok?await GH.getFile('data/users.json',tok):await GH.getRawFile('data/users.json');
     if(!f) throw new Error('মেশিন এখনো তৈরি হয়নি।');
     this.users=JSON.parse(f.content); return this.users;
   },
