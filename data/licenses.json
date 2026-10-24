@@ -60,27 +60,6 @@
     }
   },
   {
-    "license_id": "dbc9e39f6c4d7eeb82cb2ef1426703af",
-    "customer_name": "Addmin",
-    "device_code": "MM-PC-d393b15847fe1c706dcc5e4de46c9ded101f6e99a14fb172c59cd85f0c6c1e56",
-    "days": 1,
-    "issued_at": 1792395873,
-    "expires_at": 1792482273,
-    "issued_by": "ruhul",
-    "status": "active",
-    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImRiYzllMzlmNmM0ZDdlZWI4MmNiMmVmMTQyNjcwM2FmIiwiY3VzdG9tZXJfbmFtZSI6IkFkZG1pbiIsImRldmljZV9pZCI6ImQzOTNiMTU4NDdmZTFjNzA2ZGNjNWU0ZGU0NmM5ZGVkMTAxZjZlOTlhMTRmYjE3MmM1OWNkODVmMGM2YzFlNTYiLCJpc3N1ZWRfYXQiOjE3OTIzOTU4NzMsImV4cGlyZXNfYXQiOjE3OTI0ODIyNzN9.JVCfuj3_x1AyrVOwCxMgPqZqON4_7Sbu1jHf3q0zD2u-vHadASuLS6w8zKwzJrDGAt3CRsS7djhzsrd993rVAg",
-    "customer": {
-      "name": "Addmin",
-      "mobile": "",
-      "email": "",
-      "address": "",
-      "madrasa": "",
-      "madrasa_address": "",
-      "photo": ""
-    },
-    "customer_id": "cus_e66d2d01857c"
-  },
-  {
     "license_id": "90f5ddc0b096188d6fccc481ef281dcb",
     "customer_name": "H.M. khairul alom",
     "device_code": "MM-PC-090e7e08751c9c8f4f19afe4a934b3331bcc91378e8af2b7dd88f32fdb195ae8",
