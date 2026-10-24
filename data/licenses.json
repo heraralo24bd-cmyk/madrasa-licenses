@@ -162,5 +162,27 @@
       "madrasa_address": "",
       "photo": ""
     }
+  },
+  {
+    "license_id": "39fc9265b323e1a7517128e0329c590b",
+    "customer_id": null,
+    "price": 2000,
+    "customer_name": "Sajid",
+    "device_code": "MM-PC-8cc4beb79d3662de9ff7f1196b9cfdfa194d9b61a415d401f192db752fcf7011",
+    "days": 365,
+    "issued_at": 1792855501,
+    "expires_at": 1824391501,
+    "issued_by": "omor faruk",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjM5ZmM5MjY1YjMyM2UxYTc1MTcxMjhlMDMyOWM1OTBiIiwiY3VzdG9tZXJfbmFtZSI6IlNhamlkIiwiZGV2aWNlX2lkIjoiOGNjNGJlYjc5ZDM2NjJkZTlmZjdmMTE5NmI5Y2ZkZmExOTRkOWI2MWE0MTVkNDAxZjE5MmRiNzUyZmNmNzAxMSIsImlzc3VlZF9hdCI6MTc5Mjg1NTUwMSwiZXhwaXJlc19hdCI6MTgyNDM5MTUwMX0.w5S0K5MXD6ygh9CDrPavcNuDMs-CVBWPzMQ6C81jxL5_XXqXSYQZdx4Qi5YYYYp45VchMi6R0kxZ9fXoWzQQBw",
+    "customer": {
+      "name": "Sajid",
+      "mobile": "01746854441",
+      "email": "",
+      "address": "Jcjj",
+      "madrasa": "Sajud",
+      "madrasa_address": "Sajid",
+      "photo": ""
+    }
   }
 ]
