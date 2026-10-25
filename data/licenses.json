@@ -250,5 +250,27 @@
       "madrasa_address": "",
       "photo": ""
     }
+  },
+  {
+    "license_id": "18cdcbbc81831f1afcad58a6b4327486",
+    "customer_id": null,
+    "price": 0,
+    "customer_name": "q",
+    "device_code": "MM-PC-a52458697f6a0e7fb85621e7d23663cb4d334d9362654e936a2e9c37eb9b3435",
+    "days": 2,
+    "issued_at": 1792940586,
+    "expires_at": 1793113386,
+    "issued_by": "ruhul",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjE4Y2RjYmJjODE4MzFmMWFmY2FkNThhNmI0MzI3NDg2IiwiY3VzdG9tZXJfbmFtZSI6InEiLCJkZXZpY2VfaWQiOiJhNTI0NTg2OTdmNmEwZTdmYjg1NjIxZTdkMjM2NjNjYjRkMzM0ZDkzNjI2NTRlOTM2YTJlOWMzN2ViOWIzNDM1IiwiaXNzdWVkX2F0IjoxNzkyOTQwNTg2LCJleHBpcmVzX2F0IjoxNzkzMTEzMzg2fQ.N8osS10ou5_OlgPTk3bYoWBCEti59RdcLdPmanNeQCHIghmNhuLedJ6e-h3cfUjTcUsyJkYT1mmZCGLwCnfECA",
+    "customer": {
+      "name": "q",
+      "mobile": "",
+      "email": "",
+      "address": "",
+      "madrasa": "",
+      "madrasa_address": "",
+      "photo": ""
+    }
   }
 ]
