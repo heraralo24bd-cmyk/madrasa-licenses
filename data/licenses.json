@@ -107,7 +107,7 @@
     "issued_at": 1792478691,
     "expires_at": 1795070691,
     "issued_by": "ruhul",
-    "status": "active",
+    "status": "revoked",
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImY3MmI2YjA4ZTU0MDBkMmY0MTg4ZDdkMTdkNmMzNjdiIiwiY3VzdG9tZXJfbmFtZSI6IkFiZHVsIG1hamlkIiwiZGV2aWNlX2lkIjoiOTZkMTA4ODhlMDU1MGY5ODc4OWE3MjYxMmUyZGUwNzQyOTkxMGY0OTEyMjRkMmU3MDdmNzZlYzI0Y2Y0ODdlNSIsImlzc3VlZF9hdCI6MTc5MjQ3ODY5MSwiZXhwaXJlc19hdCI6MTc5NTA3MDY5MX0.zlcGTPNcTSYOgREO1uZooH3IortnnfST-4hzjzA24ByINx_Ft5brFAKunsZh8e_78Y79VWGdpDfEzSyheOUQCA",
     "customer": {
       "name": "Abdul majid",
@@ -117,7 +117,9 @@
       "madrasa": "",
       "madrasa_address": "",
       "photo": ""
-    }
+    },
+    "revoked_at": 1793204727,
+    "revoked_by": "ruhul"
   },
   {
     "license_id": "a5e9aad93eee9658408605dc1a0a5ba5",
