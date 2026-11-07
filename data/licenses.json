@@ -29,7 +29,7 @@
     "issued_at": 1792338631,
     "expires_at": 1823874631,
     "issued_by": "omor faruk",
-    "status": "active",
+    "status": "revoked",
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjZlYmRhMDE1NzExODM5NTYyNDc0YzYwMzhkNzZlYmYxIiwiY3VzdG9tZXJfbmFtZSI6IkFiZHVzIHNvYnVyIiwiZGV2aWNlX2lkIjoiZDNlOTU4NzI3ZDE5ZWJjNzFiMzM4MWYyNTAyYzM3YjE3NDg0OGE2NTdiNzM2NjY5YWY3MDFkZWNlNjZiYTIwMCIsImlzc3VlZF9hdCI6MTc5MjMzODYzMSwiZXhwaXJlc19hdCI6MTgyMzg3NDYzMX0.l9FKxPi6s6lzBewtK1FyWXmjeQT4GxxKDCjkEkNBmVXdhZdL6p3j1URUOtB1qPqGyyNYrXAku_z-SFi_zvI2Cw",
     "customer": {
       "name": "Abdus sobur",
@@ -39,7 +39,9 @@
       "madrasa": "Darus salam",
       "madrasa_address": "Vuiya para",
       "photo": ""
-    }
+    },
+    "revoked_at": 1794050633,
+    "revoked_by": "ruhul"
   },
   {
     "license_id": "38ffcd24770cab4af17ef879bca47f7e",
