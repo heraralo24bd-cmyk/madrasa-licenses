@@ -404,5 +404,27 @@
     },
     "revoked_at": 1794050719,
     "revoked_by": "ruhul"
+  },
+  {
+    "license_id": "22a3de82cb1c009507de4f2d9a6c26f4",
+    "customer_id": null,
+    "price": 0,
+    "customer_name": "qq",
+    "device_code": "MM-PC-a52458697f6a0e7fb85621e7d23663cb4d334d9362654e936a2e9c37eb9b3435",
+    "days": 7,
+    "issued_at": 1794056529,
+    "expires_at": 1794661329,
+    "issued_by": "ruhul",
+    "status": "active",
+    "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjIyYTNkZTgyY2IxYzAwOTUwN2RlNGYyZDlhNmMyNmY0IiwiY3VzdG9tZXJfbmFtZSI6InFxIiwiZGV2aWNlX2lkIjoiYTUyNDU4Njk3ZjZhMGU3ZmI4NTYyMWU3ZDIzNjYzY2I0ZDMzNGQ5MzYyNjU0ZTkzNmEyZTljMzdlYjliMzQzNSIsImlzc3VlZF9hdCI6MTc5NDA1NjUyOSwiZXhwaXJlc19hdCI6MTc5NDY2MTMyOX0.2Edl3_b7H2Jh4DPKk2ElGC8gi1UinxtcO-c3wyyxqUKkZn4xqbKyT_XPg7QuRGy5dsNlapK0kslQzdkoMzlmAQ",
+    "customer": {
+      "name": "qq",
+      "mobile": "",
+      "email": "",
+      "address": "",
+      "madrasa": "",
+      "madrasa_address": "",
+      "photo": ""
+    }
   }
 ]
