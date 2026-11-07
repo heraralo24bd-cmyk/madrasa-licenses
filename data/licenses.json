@@ -93,7 +93,7 @@
     "issued_at": 1792413538,
     "expires_at": 1823949538,
     "issued_by": "omor faruk",
-    "status": "active",
+    "status": "revoked",
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjMxNzEyOTUyYzNjOWUyZmE5YzYzZDNmOTAxYTk3NTJjIiwiY3VzdG9tZXJfbmFtZSI6IuCmruCniy4g4KaG4Kas4KeN4Kam4KeB4Kay4KeN4Kay4Ka-4Ka5IOCmhuCmsiDgpq7gpr7gpq7gp4HgpqgiLCJkZXZpY2VfaWQiOiI1MTBkZTA3OWFiMjdmZDA2YzVlZTJjNmRhOTJkYzY1MDhhY2I3NjVkY2IxMDkyN2JiNzVlZWQ1MWJhM2M0MGMxIiwiaXNzdWVkX2F0IjoxNzkyNDEzNTM4LCJleHBpcmVzX2F0IjoxODIzOTQ5NTM4fQ.qrCZJTcRwqfIEXlz5mr0fmZbBoqIvk-ON2TDYmiimhi9cyuToacKAHiYQqFLQSOS-4eQEYesh9xv6IAGG3AfAg",
     "customer": {
       "name": "মো. আব্দুল্লাহ আল মামুন",
@@ -103,7 +103,9 @@
       "madrasa": "আল-ফালাহ ইসলামিয়া মাদরাসা",
       "madrasa_address": "বিজয় নগর,পলাশবাড়ী, সাভার,ঢাকা",
       "photo": ""
-    }
+    },
+    "revoked_at": 1794050674,
+    "revoked_by": "ruhul"
   },
   {
     "license_id": "f72b6b08e5400d2f4188d7d17d6c367b",
