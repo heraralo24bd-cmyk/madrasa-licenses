@@ -295,7 +295,7 @@
     "issued_at": 1792991188,
     "expires_at": 1824527188,
     "issued_by": "omor faruk",
-    "status": "active",
+    "status": "revoked",
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjZlOTQ4OGJkNDE0ZDdkNTc4NTlkNjBhMjA5ZDMyZjk5IiwiY3VzdG9tZXJfbmFtZSI6IuCmluCmvuCmh-CmsOCngeCmsiIsImRldmljZV9pZCI6IjA5MGU3ZTA4NzUxYzljOGY0ZjE5YWZlNGE5MzRiMzMzMWJjYzkxMzc4ZThhZjJiN2RkODhmMzJmZGIxOTVhZTgiLCJpc3N1ZWRfYXQiOjE3OTI5OTExODgsImV4cGlyZXNfYXQiOjE4MjQ1MjcxODh9.NMvBnlGQI7wJmU3DWztVL5JQdTOxGl2y48e8qet6J6hJ3GCP0JWZW1vCb0fE-z-_oqlqp-9z-EmdU8AKlhqbDw",
     "customer": {
       "name": "খাইরুল",
@@ -305,7 +305,9 @@
       "madrasa": "",
       "madrasa_address": "",
       "photo": ""
-    }
+    },
+    "revoked_at": 1794050682,
+    "revoked_by": "ruhul"
   },
   {
     "license_id": "d2a327027cf90dc1f7b71a7440d466c7",
