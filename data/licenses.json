@@ -389,7 +389,7 @@
     "issued_at": 1793455470,
     "expires_at": 1794319470,
     "issued_by": "ruhul",
-    "status": "active",
+    "status": "revoked",
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6ImE4MzhlZDA1MDZhZjJiMzE4MWNhNTRlMDgwMzhjNmZlIiwiY3VzdG9tZXJfbmFtZSI6ImtoYWlydWwiLCJkZXZpY2VfaWQiOiIwOTBlN2UwODc1MWM5YzhmNGYxOWFmZTRhOTM0YjMzMzFiY2M5MTM3OGU4YWYyYjdkZDg4ZjMyZmRiMTk1YWU4IiwiaXNzdWVkX2F0IjoxNzkzNDU1NDcwLCJleHBpcmVzX2F0IjoxNzk0MzE5NDcwfQ.4OHsS4czrDu3FZNSAPUxHcQqTnE44hn35v76ai8kvpYA2RGmTWE9FzsAJYqUoTIH6YCpnOGfCQ4Oi_ziAQIQAg",
     "customer": {
       "name": "khairul",
@@ -399,6 +399,8 @@
       "madrasa": "",
       "madrasa_address": "",
       "photo": ""
-    }
+    },
+    "revoked_at": 1794050719,
+    "revoked_by": "ruhul"
   }
 ]
