@@ -73,7 +73,7 @@
     "issued_at": 1792406746,
     "expires_at": 1794998746,
     "issued_by": "ruhul",
-    "status": "active",
+    "status": "revoked",
     "key": "MM1.eyJ2IjoxLCJwcm9kdWN0IjoibWFkcmFzYS1tYW5hZ2VyIiwibGljZW5zZV9pZCI6IjkwZjVkZGMwYjA5NjE4OGQ2ZmNjYzQ4MWVmMjgxZGNiIiwiY3VzdG9tZXJfbmFtZSI6IkguTS4ga2hhaXJ1bCBhbG9tIiwiZGV2aWNlX2lkIjoiMDkwZTdlMDg3NTFjOWM4ZjRmMTlhZmU0YTkzNGIzMzMxYmNjOTEzNzhlOGFmMmI3ZGQ4OGYzMmZkYjE5NWFlOCIsImlzc3VlZF9hdCI6MTc5MjQwNjc0NiwiZXhwaXJlc19hdCI6MTc5NDk5ODc0Nn0.14MS23FFnZcINRNwdr4XhIMbLSBw4330rKWnMbwHGsjzilktGIvI99DcYE2rBVYg3ewOot-q2o16N1yAKzpXDQ",
     "customer": {
       "name": "H.M. khairul alom",
@@ -83,7 +83,9 @@
       "madrasa": "",
       "madrasa_address": "",
       "photo": ""
-    }
+    },
+    "revoked_at": 1794050694,
+    "revoked_by": "ruhul"
   },
   {
     "license_id": "31712952c3c9e2fa9c63d3f901a9752c",
